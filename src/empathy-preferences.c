@@ -53,7 +53,7 @@ typedef struct {
 
 	GtkWidget *checkbutton_show_smileys;
 	GtkWidget *checkbutton_show_contacts_in_rooms;
-	GtkWidget *combobox_chat_theme;
+	GtkWidget *treeview_chat_theme;
 	GtkWidget *checkbutton_separate_chat_windows;
 	GtkWidget *checkbutton_autoconnect;
 
@@ -911,8 +911,9 @@ preferences_theme_notify_cb (EmpathyConf *conf,
 			     const gchar *key,
 			     gpointer     user_data)
 {
+#if 0
 	EmpathyPreferences *preferences = user_data;
-	GtkComboBox        *combo;
+	GtkTreeView        *treeview;
 	gchar              *conf_name;
 	gchar              *conf_path;
 	GtkTreeModel       *model;
@@ -928,8 +929,8 @@ preferences_theme_notify_cb (EmpathyConf *conf,
 		return;
 	}
 
-	combo = GTK_COMBO_BOX (preferences->combobox_chat_theme);
-	model = gtk_combo_box_get_model (combo);
+	treeview = GTK_TREE_VIEW (preferences->treeview_chat_theme);
+	model = gtk_tree_view_get_model (treeview);
 	if (gtk_tree_model_get_iter_first (model, &iter)) {
 		gboolean is_adium;
 		gchar *name;
@@ -946,7 +947,7 @@ preferences_theme_notify_cb (EmpathyConf *conf,
 				if (tp_strdiff (name, "adium") ||
 				    !tp_strdiff (path, conf_path)) {
 					found = TRUE;
-					gtk_combo_box_set_active_iter (combo, &iter);
+					gtk_tree_view_set_active_iter (treeview, &iter);
 					g_free (name);
 					g_free (path);
 					break;
@@ -961,14 +962,16 @@ preferences_theme_notify_cb (EmpathyConf *conf,
 	/* Fallback to the first one. */
 	if (!found) {
 		if (gtk_tree_model_get_iter_first (model, &iter)) {
-			gtk_combo_box_set_active_iter (combo, &iter);
+			gtk_tree_view_set_active_iter (treeview, &iter);
 		}
 	}
 
 	g_free (conf_name);
 	g_free (conf_path);
+#endif
 }
 
+#if 0
 static void
 preferences_theme_changed_cb (GtkComboBox        *combo,
 			      EmpathyPreferences *preferences)
@@ -999,11 +1002,12 @@ preferences_theme_changed_cb (GtkComboBox        *combo,
 		g_free (path);
 	}
 }
+#endif
 
 static void
 preferences_themes_setup (EmpathyPreferences *preferences)
 {
-	GtkComboBox   *combo;
+	GtkTreeView   *treeview;
 	GtkCellLayout *cell_layout;
 	GtkCellRenderer *renderer;
 	GtkListStore  *store;
@@ -1012,8 +1016,8 @@ preferences_themes_setup (EmpathyPreferences *preferences)
 	gint           i;
 	guint          id;
 
-	combo = GTK_COMBO_BOX (preferences->combobox_chat_theme);
-	cell_layout = GTK_CELL_LAYOUT (combo);
+	treeview = GTK_TREE_VIEW (preferences->treeview_chat_theme);
+	cell_layout = GTK_CELL_LAYOUT (treeview);
 
 	/* Create the model */
 	store = gtk_list_store_new (COL_COMBO_COUNT,
@@ -1063,12 +1067,12 @@ preferences_themes_setup (EmpathyPreferences *preferences)
 	gtk_cell_layout_set_attributes (cell_layout, renderer,
 		"text", COL_COMBO_VISIBLE_NAME, NULL);
 
-	gtk_combo_box_set_model (combo, GTK_TREE_MODEL (store));
+	gtk_tree_view_set_model (treeview, GTK_TREE_MODEL (store));
 	g_object_unref (store);
 
-	g_signal_connect (combo, "changed",
+	/*g_signal_connect (treeview, "changed",
 			  G_CALLBACK (preferences_theme_changed_cb),
-			  preferences);
+			  preferences);*/
 
 	/* Select the theme from the gconf key and track changes */
 	preferences_theme_notify_cb (empathy_conf_get (),
@@ -1137,7 +1141,7 @@ empathy_preferences_show (GtkWindow *parent)
 		"notebook", &preferences->notebook,
 		"checkbutton_show_smileys", &preferences->checkbutton_show_smileys,
 		"checkbutton_show_contacts_in_rooms", &preferences->checkbutton_show_contacts_in_rooms,
-		"combobox_chat_theme", &preferences->combobox_chat_theme,
+		"treeview_chat_theme", &preferences->treeview_chat_theme,
 		"checkbutton_separate_chat_windows", &preferences->checkbutton_separate_chat_windows,
 		"checkbutton_autoconnect", &preferences->checkbutton_autoconnect,
 		"checkbutton_notifications_enabled", &preferences->checkbutton_notifications_enabled,

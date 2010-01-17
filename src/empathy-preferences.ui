@@ -13,6 +13,7 @@
     <child internal-child="vbox">
       <object class="GtkVBox" id="dialog-vbox5">
         <property name="visible">True</property>
+        <property name="orientation">vertical</property>
         <property name="spacing">2</property>
         <child>
           <object class="GtkNotebook" id="notebook">
@@ -23,6 +24,7 @@
               <object class="GtkVBox" id="vbox197">
                 <property name="visible">True</property>
                 <property name="border_width">12</property>
+                <property name="orientation">vertical</property>
                 <property name="spacing">18</property>
                 <child>
                   <object class="GtkFrame" id="frame3">
@@ -37,6 +39,7 @@
                         <child>
                           <object class="GtkVBox" id="vbox199">
                             <property name="visible">True</property>
+                            <property name="orientation">vertical</property>
                             <child>
                               <object class="GtkCheckButton" id="checkbutton_show_smileys">
                                 <property name="label" translatable="yes">Show _smileys as images</property>
@@ -102,6 +105,7 @@
                         <child>
                           <object class="GtkVBox" id="vbox218">
                             <property name="visible">True</property>
+                            <property name="orientation">vertical</property>
                             <child>
                               <object class="GtkCheckButton" id="checkbutton_separate_chat_windows">
                                 <property name="label" translatable="yes">_Open new chats in separate windows</property>
@@ -166,6 +170,7 @@
               <object class="GtkVBox" id="vbox2">
                 <property name="visible">True</property>
                 <property name="border_width">12</property>
+                <property name="orientation">vertical</property>
                 <property name="spacing">6</property>
                 <child>
                   <object class="GtkCheckButton" id="checkbutton_notifications_enabled">
@@ -189,6 +194,7 @@
                     <child>
                       <object class="GtkVBox" id="vbox3">
                         <property name="visible">True</property>
+                        <property name="orientation">vertical</property>
                         <property name="spacing">6</property>
                         <child>
                           <object class="GtkCheckButton" id="checkbutton_notifications_disabled_away">
@@ -269,10 +275,12 @@
               <object class="GtkVBox" id="outer_vbox">
                 <property name="visible">True</property>
                 <property name="border_width">12</property>
+                <property name="orientation">vertical</property>
                 <property name="spacing">18</property>
                 <child>
                   <object class="GtkVBox" id="vbox219">
                     <property name="visible">True</property>
+                    <property name="orientation">vertical</property>
                     <property name="spacing">6</property>
                     <child>
                       <object class="GtkCheckButton" id="checkbutton_sounds_enabled">
@@ -317,6 +325,7 @@
                 <child>
                   <object class="GtkVBox" id="vbox221">
                     <property name="visible">True</property>
+                    <property name="orientation">vertical</property>
                     <property name="spacing">6</property>
                     <child>
                       <object class="GtkLabel" id="label645">
@@ -433,10 +442,10 @@
                                   <object class="GtkLabel" id="label6">
                                     <property name="visible">True</property>
                                     <property name="xalign">0</property>
-                                    <property name="wrap">True</property>
                                     <property name="label" translatable="yes">Reduced location accuracy means that nothing more precise than your city, state and country will be published.  GPS coordinates will be accurate to 1 decimal place.</property>
+                                    <property name="wrap">True</property>
                                     <attributes>
-                                      <attribute name="scale" value="0.8"/>
+                                      <attribute name="scale" value="0.800000"/>
                                     </attributes>
                                   </object>
                                   <packing>
@@ -584,6 +593,7 @@
               <object class="GtkVBox" id="vbox168">
                 <property name="visible">True</property>
                 <property name="border_width">12</property>
+                <property name="orientation">vertical</property>
                 <property name="spacing">18</property>
                 <child>
                   <object class="GtkFrame" id="frame7">
@@ -598,6 +608,7 @@
                         <child>
                           <object class="GtkVBox" id="vbox201">
                             <property name="visible">True</property>
+                            <property name="orientation">vertical</property>
                             <property name="spacing">6</property>
                             <child>
                               <object class="GtkHBox" id="hbox153">
@@ -654,10 +665,10 @@
                                   <object class="GtkLabel" id="label616">
                                     <property name="visible">True</property>
                                     <property name="xalign">0</property>
-                                    <property name="wrap">True</property>
                                     <property name="label" translatable="yes">The list of languages reflects only the languages for which you have a dictionary installed.</property>
+                                    <property name="wrap">True</property>
                                     <attributes>
-                                      <attribute name="scale" value="0.8"/>
+                                      <attribute name="scale" value="0.800000"/>
                                     </attributes>
                                   </object>
                                   <packing>
@@ -710,70 +721,76 @@
               <object class="GtkVBox" id="vbox206">
                 <property name="visible">True</property>
                 <property name="border_width">12</property>
+                <property name="orientation">vertical</property>
                 <property name="spacing">18</property>
                 <child>
-                  <object class="GtkFrame" id="frame11">
+                  <object class="GtkVBox" id="vbox6">
                     <property name="visible">True</property>
-                    <property name="label_xalign">0</property>
-                    <property name="shadow_type">none</property>
+                    <property name="orientation">vertical</property>
+                    <property name="spacing">6</property>
                     <child>
-                      <object class="GtkAlignment" id="alignment19">
+                      <object class="GtkLabel" id="label4">
                         <property name="visible">True</property>
-                        <property name="top_padding">6</property>
-                        <property name="left_padding">12</property>
+                        <property name="xalign">0</property>
+                        <property name="yalign">0</property>
+                        <property name="label" translatable="yes">Available themes:</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkTreeView" id="treeview_themes">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                      </object>
+                      <packing>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkHButtonBox" id="buttonbox_themes">
+                        <property name="visible">True</property>
+                        <property name="spacing">6</property>
+                        <property name="layout_style">start</property>
                         <child>
-                          <object class="GtkVBox" id="vbox207">
+                          <object class="GtkButton" id="button_theme_add">
+                            <property name="label">gtk-add</property>
                             <property name="visible">True</property>
-                            <property name="spacing">6</property>
-                            <child>
-                              <object class="GtkHBox" id="hbox139">
-                                <property name="visible">True</property>
-                                <property name="spacing">12</property>
-                                <child>
-                                  <object class="GtkLabel" id="label586">
-                                    <property name="visible">True</property>
-                                    <property name="label" translatable="yes">Chat Th_eme:</property>
-                                    <property name="use_underline">True</property>
-                                    <property name="mnemonic_widget">combobox_chat_theme</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">False</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkComboBox" id="combobox_chat_theme">
-                                    <property name="visible">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">False</property>
-                                    <property name="position">1</property>
-                                  </packing>
-                                </child>
-                              </object>
-                              <packing>
-                                <property name="position">0</property>
-                              </packing>
-                            </child>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">True</property>
+                            <property name="use_stock">True</property>
                           </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">False</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkButton" id="button_theme_remove">
+                            <property name="label">gtk-remove</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">True</property>
+                            <property name="use_stock">True</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">False</property>
+                            <property name="position">1</property>
+                          </packing>
                         </child>
                       </object>
-                    </child>
-                    <child type="label">
-                      <object class="GtkLabel" id="label626">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">Appearance</property>
-                        <attributes>
-                          <attribute name="weight" value="bold"/>
-                        </attributes>
-                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                        <property name="position">2</property>
+                      </packing>
                     </child>
                   </object>
                   <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">False</property>
                     <property name="position">0</property>
                   </packing>
                 </child>
