@@ -913,9 +913,8 @@ preferences_theme_notify_cb (EmpathyConf *conf,
 			     const gchar *key,
 			     gpointer     user_data)
 {
-#if 0
 	EmpathyPreferences *preferences = user_data;
-	GtkTreeView        *treeview;
+	GtkIconView        *iconview;
 	gchar              *conf_name;
 	gchar              *conf_path;
 	GtkTreeModel       *model;
@@ -931,8 +930,8 @@ preferences_theme_notify_cb (EmpathyConf *conf,
 		return;
 	}
 
-	treeview = GTK_TREE_VIEW (preferences->treeview_chat_theme);
-	model = gtk_tree_view_get_model (treeview);
+	iconview = GTK_ICON_VIEW (preferences->iconview_chat_theme);
+	model = gtk_icon_view_get_model (iconview);
 	if (gtk_tree_model_get_iter_first (model, &iter)) {
 		gboolean is_adium;
 		gchar *name;
@@ -948,8 +947,12 @@ preferences_theme_notify_cb (EmpathyConf *conf,
 			if (!tp_strdiff (name, conf_name)) {
 				if (tp_strdiff (name, "adium") ||
 				    !tp_strdiff (path, conf_path)) {
+					GtkTreePath *treepath = gtk_tree_model_get_path (model, &iter);
 					found = TRUE;
-					gtk_tree_view_set_active_iter (treeview, &iter);
+					
+					gtk_icon_view_select_path (iconview, treepath);
+					
+					gtk_tree_path_free (treepath);
 					g_free (name);
 					g_free (path);
 					break;
@@ -964,13 +967,14 @@ preferences_theme_notify_cb (EmpathyConf *conf,
 	/* Fallback to the first one. */
 	if (!found) {
 		if (gtk_tree_model_get_iter_first (model, &iter)) {
-			gtk_tree_view_set_active_iter (treeview, &iter);
+			GtkTreePath *treepath = gtk_tree_model_get_path (model, &iter);
+			gtk_icon_view_select_path (iconview, treepath);
+			gtk_tree_path_free (treepath);
 		}
 	}
 
 	g_free (conf_name);
 	g_free (conf_path);
-#endif
 }
 
 static void
@@ -1088,11 +1092,6 @@ preferences_themes_setup (EmpathyPreferences *preferences)
 
 	gtk_icon_view_set_model (iconview, GTK_TREE_MODEL (store));
 	g_object_unref (store);
-
-	/* Add cell renderer 
-	g_signal_connect (iconview, "changed",
-			  G_CALLBACK (preferences_theme_changed_cb),
-			  preferences);*/
 
 	/* Select the theme from the gconf key and track changes */
 	preferences_theme_notify_cb (empathy_conf_get (),
