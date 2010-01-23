@@ -973,36 +973,51 @@ preferences_theme_notify_cb (EmpathyConf *conf,
 #endif
 }
 
-#if 0
 static void
-preferences_theme_changed_cb (GtkComboBox        *combo,
+preferences_theme_changed_cb (GtkIconView        *iconview,
 			      EmpathyPreferences *preferences)
 {
-	GtkTreeModel *model;
-	GtkTreeIter   iter;
-	gboolean      is_adium;
-	gchar        *name;
-	gchar        *path;
+	GList *selection = gtk_icon_view_get_selected_items (iconview);
+	
+	if (selection) {
+		GtkTreePath *treepath = selection->data;
+		GtkTreeModel *model = gtk_icon_view_get_model (iconview);
+		GtkTreeIter iter;
 
-	if (gtk_combo_box_get_active_iter (combo, &iter)) {
-		model = gtk_combo_box_get_model (combo);
+		if (gtk_tree_model_get_iter (model, &iter, treepath)) {
+			gboolean is_adium;
+			gchar *name;
+			gchar *path;
 
-		gtk_tree_model_get (model, &iter,
-				    COL_COMBO_IS_ADIUM, &is_adium,
-				    COL_COMBO_NAME, &name,
-				    COL_COMBO_PATH, &path,
-				    -1);
+			gtk_tree_model_get (model, &iter,
+					    COL_COMBO_IS_ADIUM, &is_adium,
+					    COL_COMBO_NAME, &name,
+					    COL_COMBO_PATH, &path,
+					    -1);
 
-		empathy_conf_set_string (empathy_conf_get (),
-					 EMPATHY_PREFS_CHAT_THEME,
-					 name);
-		if (is_adium == TRUE)
 			empathy_conf_set_string (empathy_conf_get (),
-						 EMPATHY_PREFS_CHAT_ADIUM_PATH,
-						 path);
-		g_free (name);
-		g_free (path);
+						 EMPATHY_PREFS_CHAT_THEME,
+						 name);
+			if (is_adium == TRUE) {
+				empathy_conf_set_string (empathy_conf_get (),
+							 EMPATHY_PREFS_CHAT_ADIUM_PATH,
+							 path);
+			}
+
+			g_free (name);
+			g_free (path);
+		}
+		g_list_foreach (selection, (GFunc) gtk_tree_path_free, NULL);
+		g_list_free (selection);
 	}
+}
+
+#if 0
+static void
+preferences_themes_install (GtkButton *button,
+                            gpointer user_data)
+{
+
 }
 #endif
 
@@ -1068,20 +1083,14 @@ preferences_themes_setup (EmpathyPreferences *preferences)
 		adium_themes = g_list_delete_link (adium_themes, adium_themes);
 	}
 
-	gtk_icon_view_set_model (iconview, GTK_TREE_MODEL (store));
 	gtk_icon_view_set_text_column (iconview, COL_COMBO_VISIBLE_NAME);
 	gtk_icon_view_set_pixbuf_column (iconview, COL_COMBO_PREVIEW);
 
-	/* Add cell renderer 
-	renderer = gtk_cell_renderer_text_new ();
-	gtk_cell_layout_pack_start (cell_layout, renderer, TRUE);
-	gtk_cell_layout_set_attributes (cell_layout, renderer,
-		"text", COL_COMBO_VISIBLE_NAME, NULL);
-
-	gtk_tree_view_set_model (treeview, GTK_TREE_MODEL (store));
+	gtk_icon_view_set_model (iconview, GTK_TREE_MODEL (store));
 	g_object_unref (store);
 
-	g_signal_connect (treeview, "changed",
+	/* Add cell renderer 
+	g_signal_connect (iconview, "changed",
 			  G_CALLBACK (preferences_theme_changed_cb),
 			  preferences);*/
 
@@ -1175,6 +1184,7 @@ empathy_preferences_show (GtkWindow *parent)
 	empathy_builder_connect (gui, preferences,
 			      "preferences_dialog", "destroy", preferences_destroy_cb,
 			      "preferences_dialog", "response", preferences_response_cb,
+			      "iconview_chat_theme", "selection-changed", preferences_theme_changed_cb,
 			      NULL);
 
 	g_object_unref (gui);
