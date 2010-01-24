@@ -1016,16 +1016,15 @@ preferences_theme_changed_cb (GtkIconView        *iconview,
 	}
 }
 
-#if 0
 static void
-preferences_themes_install (GtkButton *button,
-                            gpointer user_data)
+preferences_themes_install_cb (GtkButton *button,
+                               gpointer user_data)
 {
-	gchar *path;
 	GtkWidget *dialog;
+	EmpathyPreferences *preferences = user_data;
 
 	dialog = gtk_file_chooser_dialog_new ("Open File",
-				      parent_window,
+				      GTK_WINDOW (preferences->dialog),
 				      GTK_FILE_CHOOSER_ACTION_OPEN,
 				      GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
 				      GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
@@ -1033,13 +1032,12 @@ preferences_themes_install (GtkButton *button,
 
 	if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT) {
 		char *filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
-		empathy_theme_manager_install_from_path (path);
+		empathy_theme_manager_install_theme (filename);
 		g_free (filename);
 	}
 
 	gtk_widget_destroy (dialog);
 }
-#endif
 
 static void
 preferences_themes_setup (EmpathyPreferences *preferences)
@@ -1200,6 +1198,7 @@ empathy_preferences_show (GtkWindow *parent)
 			      "preferences_dialog", "destroy", preferences_destroy_cb,
 			      "preferences_dialog", "response", preferences_response_cb,
 			      "iconview_chat_theme", "selection-changed", preferences_theme_changed_cb,
+	                      "button_theme_install", "clicked", preferences_themes_install_cb,
 			      NULL);
 
 	g_object_unref (gui);

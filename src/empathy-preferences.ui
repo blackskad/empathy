@@ -739,7 +739,7 @@
                         <property name="visible">True</property>
                         <property name="spacing">6</property>
                         <child>
-                          <object class="GtkButton" id="button_theme_add">
+                          <object class="GtkButton" id="button_theme_install">
                             <property name="label">Install...</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
