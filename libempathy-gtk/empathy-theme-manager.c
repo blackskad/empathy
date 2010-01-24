@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
+/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
  * Copyright (C) 2005-2007 Imendio AB
  * Copyright (C) 2008 Collabora Ltd.
@@ -597,4 +597,82 @@ empathy_theme_manager_get_adium_themes (void)
 #else
 	return NULL;
 #endif /* HAVE_WEBKIT */
+}
+
+static void
+empathy_theme_manager_theme_file_loaded (GObject *source_object,
+    GAsyncResult *result,
+    gpointer user_data)
+{
+  GError *error = NULL;
+  gchar *contents;
+  gsize length;
+
+  GFile *file = G_FILE (source_object);
+  gchar *filename = g_file_get_uri (file);
+
+  if (!g_file_load_contents_finish (file, result, &contents, &length, NULL, &error))
+    {
+      /* FIXME: show a nice error dialog */
+      g_warning ("Failed to load '%s': %s", filename, error->message);
+      g_error_free (error);
+      return;
+    }
+  else
+    {
+      g_message ("Loaded the contents of %s", filename);
+    }
+  g_free (filename);
+
+#if 0
+	struct archive *zip;
+
+  /* parse the archive contents */
+  zip = archive_read_new ();
+  archive_read_support_compression_all (zip);
+  archive_read_support_format_all (zip);
+  if (archive_read_open_memory (zip, (void *) contents, length) != 0)
+    {
+      /* FIXME: show a nice error dialog */
+      gchar *filename = g_file_get_uri (file);
+      g_warning ("Failed to read archive '%s'", filename); 
+      g_free (filename);
+      return;
+    }
+
+  /* write the decompressed files to disc */
+
+	return zip;
+#endif
+}
+
+gboolean
+empathy_theme_manager_install_theme (gchar *path)
+{
+  GFile *file;
+  gchar *filename;
+
+  g_return_val_if_fail (!EMP_STR_EMPTY (path), FALSE);
+  g_return_val_if_fail (g_strcmp0(path, "adiumxtra://") != 0, FALSE);
+
+  /* Assume we can use http to fetch the theme when the path is prefixed with
+   * adiumxtra://
+   * */
+  if (g_str_has_prefix (path, "adiumxtra://"))
+    {
+      filename = g_strdup_printf ("http://%s", path + strlen ("adiumxtra://"));
+    }
+  else
+    {
+      filename = g_strdup (path);
+    }
+
+  /* Read the archive file & load it async */
+  file = g_file_new_for_commandline_arg (filename);
+  g_free (filename);
+
+  g_file_load_contents_async (file, NULL,
+      empathy_theme_manager_theme_file_loaded, NULL);
+
+  return TRUE;
 }

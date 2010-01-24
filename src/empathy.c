@@ -67,6 +67,7 @@
 #include <libempathy-gtk/empathy-conf.h>
 #include <libempathy-gtk/empathy-ui-utils.h>
 #include <libempathy-gtk/empathy-location-manager.h>
+#include <libempathy-gtk/empathy-theme-manager.h>
 
 #include "empathy-main-window.h"
 #include "empathy-import-mc4-accounts.h"
@@ -590,6 +591,8 @@ main (int argc, char *argv[])
   UniqueApp *unique_app;
   gboolean chatroom_manager_ready;
   gboolean autoaway = TRUE;
+  gchar *theme_archive_file = NULL;
+
 #ifdef ENABLE_DEBUG
   TpDebugSender *debug_sender;
 #endif
@@ -603,6 +606,10 @@ main (int argc, char *argv[])
       { "start-hidden", 'h',
         0, G_OPTION_ARG_NONE, &start_hidden,
         N_("Don't display the contact list or any other dialogs on startup"),
+        NULL },
+      { "install-theme", 'i',
+        0, G_OPTION_ARG_STRING, theme_archive_file,
+        N_("Theme to install, starting with adiumxtra://"),
         NULL },
       { "version", 'v',
         G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, show_version_cb,
@@ -643,6 +650,12 @@ main (int argc, char *argv[])
   debug_sender = tp_debug_sender_dup ();
   g_log_set_default_handler (tp_debug_sender_log_handler, G_LOG_DOMAIN);
 #endif
+
+  /* Install the theme and quit */
+  if (theme_archive_file)
+    {
+      empathy_theme_manager_install_theme (theme_archive_file);
+    }
 
   unique_app = unique_app_new ("org.gnome."PACKAGE_NAME, NULL);
 

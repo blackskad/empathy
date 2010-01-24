@@ -53,7 +53,7 @@ EmpathyThemeManager *   empathy_theme_manager_get         (void);
 const gchar **          empathy_theme_manager_get_themes  (void);
 GList *                 empathy_theme_manager_get_adium_themes (void);
 EmpathyChatView *       empathy_theme_manager_create_view (EmpathyThemeManager *manager);
-
+gboolean                empathy_theme_manager_install_theme (gchar* path);
 G_END_DECLS
 
 #endif /* __EMPATHY_THEME_MANAGER_H__ */
