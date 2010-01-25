@@ -27,6 +27,7 @@
 #include <string.h>
 
 #include <gtk/gtk.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 #include <glib/gi18n.h>
 #include <telepathy-glib/dbus.h>
 #include <telepathy-glib/util.h>
@@ -53,7 +54,7 @@ typedef struct {
 
 	GtkWidget *checkbutton_show_smileys;
 	GtkWidget *checkbutton_show_contacts_in_rooms;
-	GtkWidget *treeview_chat_theme;
+	GtkWidget *iconview_chat_theme;
 	GtkWidget *checkbutton_separate_chat_windows;
 	GtkWidget *checkbutton_autoconnect;
 
@@ -128,6 +129,7 @@ enum {
 	COL_COMBO_VISIBLE_NAME,
 	COL_COMBO_NAME,
 	COL_COMBO_PATH,
+	COL_COMBO_PREVIEW,
 	COL_COMBO_COUNT
 };
 
@@ -1007,24 +1009,27 @@ preferences_theme_changed_cb (GtkComboBox        *combo,
 static void
 preferences_themes_setup (EmpathyPreferences *preferences)
 {
-	GtkTreeView   *treeview;
-	GtkCellLayout *cell_layout;
-	GtkCellRenderer *renderer;
+	GtkIconView   *iconview;
 	GtkListStore  *store;
 	const gchar  **themes;
 	GList         *adium_themes;
 	gint           i;
 	guint          id;
+	GdkPixbuf     *pixbuf;
 
-	treeview = GTK_TREE_VIEW (preferences->treeview_chat_theme);
-	cell_layout = GTK_CELL_LAYOUT (treeview);
+	iconview = GTK_ICON_VIEW (preferences->iconview_chat_theme);
+
+	pixbuf = gtk_widget_render_icon (preferences->iconview_chat_theme,
+	                                 GTK_STOCK_MISSING_IMAGE,
+	                                 GTK_ICON_SIZE_DND, NULL);
 
 	/* Create the model */
 	store = gtk_list_store_new (COL_COMBO_COUNT,
 				    G_TYPE_BOOLEAN, /* Is an Adium theme */
 				    G_TYPE_STRING,  /* Display name */
 				    G_TYPE_STRING,  /* Theme name */
-				    G_TYPE_STRING); /* Theme path */
+				    G_TYPE_STRING,  /* Theme path */
+				    GDK_TYPE_PIXBUF); /* Theme preview */
 	gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (store),
 		COL_COMBO_VISIBLE_NAME, GTK_SORT_ASCENDING);
 
@@ -1036,6 +1041,7 @@ preferences_themes_setup (EmpathyPreferences *preferences)
 			COL_COMBO_VISIBLE_NAME, _(themes[i + 1]),
 			COL_COMBO_NAME, themes[i],
 			COL_COMBO_PATH, NULL,
+			COL_COMBO_PREVIEW, pixbuf,
 			-1);
 	}
 
@@ -1055,13 +1061,18 @@ preferences_themes_setup (EmpathyPreferences *preferences)
 				COL_COMBO_VISIBLE_NAME, name,
 				COL_COMBO_NAME, "adium",
 				COL_COMBO_PATH, path,
+				COL_COMBO_PREVIEW, pixbuf,
 				-1);
 		}
 		g_hash_table_unref (info);
 		adium_themes = g_list_delete_link (adium_themes, adium_themes);
 	}
 
-	/* Add cell renderer */
+	gtk_icon_view_set_model (iconview, GTK_TREE_MODEL (store));
+	gtk_icon_view_set_text_column (iconview, COL_COMBO_VISIBLE_NAME);
+	gtk_icon_view_set_pixbuf_column (iconview, COL_COMBO_PREVIEW);
+
+	/* Add cell renderer 
 	renderer = gtk_cell_renderer_text_new ();
 	gtk_cell_layout_pack_start (cell_layout, renderer, TRUE);
 	gtk_cell_layout_set_attributes (cell_layout, renderer,
@@ -1070,7 +1081,7 @@ preferences_themes_setup (EmpathyPreferences *preferences)
 	gtk_tree_view_set_model (treeview, GTK_TREE_MODEL (store));
 	g_object_unref (store);
 
-	/*g_signal_connect (treeview, "changed",
+	g_signal_connect (treeview, "changed",
 			  G_CALLBACK (preferences_theme_changed_cb),
 			  preferences);*/
 
@@ -1141,7 +1152,7 @@ empathy_preferences_show (GtkWindow *parent)
 		"notebook", &preferences->notebook,
 		"checkbutton_show_smileys", &preferences->checkbutton_show_smileys,
 		"checkbutton_show_contacts_in_rooms", &preferences->checkbutton_show_contacts_in_rooms,
-		"treeview_chat_theme", &preferences->treeview_chat_theme,
+		"iconview_chat_theme", &preferences->iconview_chat_theme,
 		"checkbutton_separate_chat_windows", &preferences->checkbutton_separate_chat_windows,
 		"checkbutton_autoconnect", &preferences->checkbutton_autoconnect,
 		"checkbutton_notifications_enabled", &preferences->checkbutton_notifications_enabled,
