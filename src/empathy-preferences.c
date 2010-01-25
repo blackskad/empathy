@@ -1048,13 +1048,14 @@ preferences_themes_setup (EmpathyPreferences *preferences)
 	GList         *adium_themes;
 	gint           i;
 	guint          id;
+	GdkPixbuf     *dummypixbuf;
 	GdkPixbuf     *pixbuf;
 
 	iconview = GTK_ICON_VIEW (preferences->iconview_chat_theme);
 
-	pixbuf = gtk_widget_render_icon (preferences->iconview_chat_theme,
-	                                 GTK_STOCK_MISSING_IMAGE,
-	                                 GTK_ICON_SIZE_DND, NULL);
+	dummypixbuf = gtk_widget_render_icon (preferences->iconview_chat_theme,
+	                                      GTK_STOCK_MISSING_IMAGE,
+	                                      GTK_ICON_SIZE_DND, NULL);
 
 	/* Create the model */
 	store = gtk_list_store_new (COL_COMBO_COUNT,
@@ -1069,6 +1070,17 @@ preferences_themes_setup (EmpathyPreferences *preferences)
 	/* Fill the model */
 	themes = empathy_theme_manager_get_themes ();
 	for (i = 0; themes[i]; i += 2) {
+		GError *error = NULL;
+		gchar *theme_icon_name = g_strdup_printf ("theme-%s.png", themes[i]);
+		gchar *theme_icon_path = empathy_file_lookup (theme_icon_name, "src");
+		pixbuf = gdk_pixbuf_new_from_file (theme_icon_path, &error);
+		g_free (theme_icon_path);
+		g_free (theme_icon_name);
+
+		if (error) {
+			pixbuf = dummypixbuf;
+		}
+
 		gtk_list_store_insert_with_values (store, NULL, -1,
 			COL_COMBO_IS_ADIUM, FALSE,
 			COL_COMBO_VISIBLE_NAME, _(themes[i + 1]),
@@ -1094,7 +1106,7 @@ preferences_themes_setup (EmpathyPreferences *preferences)
 				COL_COMBO_VISIBLE_NAME, name,
 				COL_COMBO_NAME, "adium",
 				COL_COMBO_PATH, path,
-				COL_COMBO_PREVIEW, pixbuf,
+				COL_COMBO_PREVIEW, dummypixbuf,
 				-1);
 		}
 		g_hash_table_unref (info);

@@ -22,6 +22,13 @@ servicefiledir = $(datadir)/dbus-1/services
 servicefile_in_files = org.freedesktop.Telepathy.Client.Empathy.service.in
 servicefile_DATA = $(servicefile_in_files:.service.in=.service)
 
+imagesdir = $(datadir)/empathy
+images_DATA = \
+	theme-blue.png		\
+	theme-classic.png	\
+	theme-clean.png		\
+	theme-simple.png	
+
 org.freedesktop.Telepathy.Client.Empathy.service: org.freedesktop.Telepathy.Client.Empathy.service.in
 	$(AM_V_GEN)sed -e "s|[@]bindir[@]|$(bindir)|" $< > $@
 
@@ -50,7 +57,8 @@ EXTRA_DIST = 				\
 	$(streamingprefs_DATA)		\
 	$(html_DATA)			\
 	$(clientfile_DATA)		\
-	$(servicefile_in_files)
+	$(servicefile_in_files)         \
+	$(images_DATA)
 
 DISTCLEANFILES = 		\
 	$(desktop_DATA)		\
