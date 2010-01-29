@@ -906,7 +906,6 @@ preferences_radio_button_toggled_cb (GtkWidget *button,
 
 	empathy_conf_set_string (empathy_conf_get (), key, value);
 }
-#endif
 
 static void
 preferences_theme_notify_cb (EmpathyConf *conf,
@@ -1015,6 +1014,7 @@ preferences_theme_changed_cb (GtkIconView        *iconview,
 		g_list_free (selection);
 	}
 }
+#endif
 
 static void
 preferences_themes_install_cb (GtkButton *button,
@@ -1047,7 +1047,7 @@ preferences_themes_setup (EmpathyPreferences *preferences)
 //	const gchar  **themes;
 //	GList         *adium_themes;
 //	gint           i;
-	guint          id;
+//	guint          id;
 //	GdkPixbuf     *dummypixbuf;
 //	GdkPixbuf     *pixbuf;
 
@@ -1120,6 +1120,7 @@ preferences_themes_setup (EmpathyPreferences *preferences)
 	gtk_icon_view_set_model (iconview,
 		GTK_TREE_MODEL (empathy_theme_manager_get ()));
 
+#if 0
 	/* Select the theme from the gconf key and track changes */
 	preferences_theme_notify_cb (empathy_conf_get (),
 				     EMPATHY_PREFS_CHAT_THEME,
@@ -1139,6 +1140,7 @@ preferences_themes_setup (EmpathyPreferences *preferences)
 	if (id) {
 		preferences_add_id (preferences, id);
 	}
+#endif
 }
 
 static void
@@ -1210,7 +1212,7 @@ empathy_preferences_show (GtkWindow *parent)
 	empathy_builder_connect (gui, preferences,
 			      "preferences_dialog", "destroy", preferences_destroy_cb,
 			      "preferences_dialog", "response", preferences_response_cb,
-			      "iconview_chat_theme", "selection-changed", preferences_theme_changed_cb,
+	//		      "iconview_chat_theme", "selection-changed", preferences_theme_changed_cb,
 	                      "button_theme_install", "clicked", preferences_themes_install_cb,
 			      NULL);
 

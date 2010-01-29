@@ -32,7 +32,9 @@ G_DEFINE_TYPE (EmpathyClassicChatTheme, empathy_classic_chat_theme, EMPATHY_TYPE
 static EmpathyChatTheme *
 empathy_classic_chat_theme_new ()
 {
-  return g_object_new (EMPATHY_TYPE_CLASSIC_CHAT_THEME, "theme-name", "classic");
+  return EMPATHY_CHAT_THEME (g_object_new (EMPATHY_TYPE_CLASSIC_CHAT_THEME,
+      "theme-name", "classic",
+      NULL));
 }
 
 GList *

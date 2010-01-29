@@ -37,6 +37,7 @@ struct _EmpathyChatThemePriv
 };
 
 typedef enum {
+  PROP_0,
   PROP_THEME_NAME
 } EmpathyChatThemeProperty;
 
@@ -77,6 +78,23 @@ empathy_chat_theme_get_property(GObject *object,
 }
 
 static void
+empathy_chat_theme_set_property (GObject *object,
+    guint param_id,
+    const GValue *value,
+    GParamSpec *pspec)
+{
+  EmpathyChatThemePriv *priv = GET_PRIV (object);
+
+  switch (param_id)
+    {
+      case PROP_THEME_NAME:
+        g_assert (priv->name == NULL);
+        priv->name = g_strdup (g_value_get_string (value)); 
+        break;
+    }
+}
+
+static void
 empathy_chat_theme_init (EmpathyChatTheme *self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, EMPATHY_TYPE_CHAT_THEME,
@@ -88,6 +106,7 @@ empathy_chat_theme_class_init (EmpathyChatThemeClass *class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (class);
 
+  object_class->set_property = empathy_chat_theme_set_property;
   object_class->get_property = empathy_chat_theme_get_property;
 
 	g_object_class_install_property (object_class, PROP_THEME_NAME,
@@ -95,7 +114,7 @@ empathy_chat_theme_class_init (EmpathyChatThemeClass *class)
           "The theme name",
           "The name of the theme",
           NULL,
-          G_PARAM_CONSTRUCT_ONLY | G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_type_class_add_private (object_class, sizeof (EmpathyChatThemePriv));
 }

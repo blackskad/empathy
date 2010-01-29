@@ -62,7 +62,7 @@ enum {
 
 static guint signals[LAST_SIGNAL] = { 0 };
 
-G_DEFINE_TYPE (EmpathyThemeManager, empathy_theme_manager, G_TYPE_OBJECT);
+G_DEFINE_TYPE (EmpathyThemeManager, empathy_theme_manager, GTK_TYPE_LIST_STORE);
 
 EmpathyThemeManager *
 empathy_theme_manager_get (void)
@@ -100,8 +100,8 @@ empathy_theme_manager_add_theme (EmpathyThemeManager *self,
   GtkTreeIter iter;
   
   /* FIXME: check if theme is already present? */
-  gtk_tree_store_append (GTK_TREE_STORE (self), &iter, NULL);
-  gtk_tree_store_set (GTK_TREE_STORE (self), &iter,
+  gtk_list_store_append (GTK_LIST_STORE (self), &iter);
+  gtk_list_store_set (GTK_LIST_STORE (self), &iter,
       EMPATHY_THEME_MANAGER_NAME, empathy_chat_theme_get_name (theme),
       EMPATHY_THEME_MANAGER_THEME, theme,
       -1);
