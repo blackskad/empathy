@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
+/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
  * Copyright (C) 2005-2007 Imendio AB
  * Copyright (C) 2008 Collabora Ltd.
@@ -19,6 +19,7 @@
  * Boston, MA  02110-1301  USA
  *
  * Authors: Xavier Claessens <xclaesse@gmail.com>
+ *          Thomas Meire <blackskad@gmail.com>
  */
 
 #ifndef __EMPATHY_THEME_MANAGER_H__
@@ -28,6 +29,15 @@
 #include "empathy-chat-view.h"
 
 G_BEGIN_DECLS
+
+typedef enum {
+  //EMPATHY_THEME_MANAGER_PATH,
+  EMPATHY_THEME_MANAGER_NAME,
+  //EMPATHY_THEME_MANAGER_DISPLAY_NAME,
+  //EMPATHY_THEME_MANAGER_THUMBNAIL,
+  EMPATHY_THEME_MANAGER_THEME,
+  EMPATHY_THEME_MANAGER_COUNT
+} EmpathyThemeManagerColumn;
 
 #define EMPATHY_TYPE_THEME_MANAGER         (empathy_theme_manager_get_type ())
 #define EMPATHY_THEME_MANAGER(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), EMPATHY_TYPE_THEME_MANAGER, EmpathyThemeManager))
@@ -40,20 +50,18 @@ typedef struct _EmpathyThemeManager      EmpathyThemeManager;
 typedef struct _EmpathyThemeManagerClass EmpathyThemeManagerClass;
 
 struct _EmpathyThemeManager {
-	GObject parent;
+	GtkListStore parent;
 	gpointer priv;
 };
 
 struct _EmpathyThemeManagerClass {
-	GObjectClass parent_class;
+	GtkListStoreClass parent_class;
 };
 
 GType                   empathy_theme_manager_get_type    (void) G_GNUC_CONST;
 EmpathyThemeManager *   empathy_theme_manager_get         (void);
-const gchar **          empathy_theme_manager_get_themes  (void);
-GList *                 empathy_theme_manager_get_adium_themes (void);
 EmpathyChatView *       empathy_theme_manager_create_view (EmpathyThemeManager *manager);
-gboolean                empathy_theme_manager_install_theme (gchar* path);
+
 G_END_DECLS
 
 #endif /* __EMPATHY_THEME_MANAGER_H__ */

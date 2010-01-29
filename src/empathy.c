@@ -654,7 +654,8 @@ main (int argc, char *argv[])
   /* Install the theme and quit */
   if (theme_archive_file)
     {
-      empathy_theme_manager_install_theme (theme_archive_file);
+      //empathy_theme_manager_install_theme (theme_archive_file);
+      return 0;
     }
 
   unique_app = unique_app_new ("org.gnome."PACKAGE_NAME, NULL);

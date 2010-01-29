@@ -1032,7 +1032,7 @@ preferences_themes_install_cb (GtkButton *button,
 
 	if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT) {
 		char *filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
-		empathy_theme_manager_install_theme (filename);
+		//empathy_theme_manager_install_theme (filename);
 		g_free (filename);
 	}
 
@@ -1043,16 +1043,17 @@ static void
 preferences_themes_setup (EmpathyPreferences *preferences)
 {
 	GtkIconView   *iconview;
-	GtkListStore  *store;
-	const gchar  **themes;
-	GList         *adium_themes;
-	gint           i;
+//	GtkListStore  *store;
+//	const gchar  **themes;
+//	GList         *adium_themes;
+//	gint           i;
 	guint          id;
-	GdkPixbuf     *dummypixbuf;
-	GdkPixbuf     *pixbuf;
+//	GdkPixbuf     *dummypixbuf;
+//	GdkPixbuf     *pixbuf;
 
 	iconview = GTK_ICON_VIEW (preferences->iconview_chat_theme);
 
+#if 0
 	dummypixbuf = gtk_widget_render_icon (preferences->iconview_chat_theme,
 	                                      GTK_STOCK_MISSING_IMAGE,
 	                                      GTK_ICON_SIZE_DND, NULL);
@@ -1112,12 +1113,12 @@ preferences_themes_setup (EmpathyPreferences *preferences)
 		g_hash_table_unref (info);
 		adium_themes = g_list_delete_link (adium_themes, adium_themes);
 	}
+#endif
+	gtk_icon_view_set_text_column (iconview, EMPATHY_THEME_MANAGER_NAME);
+	/* gtk_icon_view_set_pixbuf_column (iconview, COL_COMBO_PREVIEW); */
 
-	gtk_icon_view_set_text_column (iconview, COL_COMBO_VISIBLE_NAME);
-	gtk_icon_view_set_pixbuf_column (iconview, COL_COMBO_PREVIEW);
-
-	gtk_icon_view_set_model (iconview, GTK_TREE_MODEL (store));
-	g_object_unref (store);
+	gtk_icon_view_set_model (iconview,
+		GTK_TREE_MODEL (empathy_theme_manager_get ()));
 
 	/* Select the theme from the gconf key and track changes */
 	preferences_theme_notify_cb (empathy_conf_get (),

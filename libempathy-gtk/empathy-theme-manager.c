@@ -19,6 +19,7 @@
  * Boston, MA  02110-1301  USA
  *
  * Authors: Xavier Claessens <xclaesse@gmail.com>
+ *          Thomas Meire <blackskad@gmail.com>
  */
 
 #include "config.h"
@@ -35,7 +36,9 @@
 #include "empathy-theme-manager.h"
 #include "empathy-chat-view.h"
 #include "empathy-conf.h"
+#include "empathy-chat-theme.h"
 #include "empathy-chat-text-view.h"
+#include "empathy-classic-chat-theme.h"
 #include "empathy-theme-boxes.h"
 #include "empathy-theme-irc.h"
 
@@ -47,13 +50,9 @@
 #include <libempathy/empathy-debug.h>
 
 #define GET_PRIV(obj) EMPATHY_GET_PRIV (obj, EmpathyThemeManager)
+
 typedef struct {
-	gchar       *name;
-	guint        name_notify_id;
-	gchar       *adium_path;
-	guint        adium_path_notify_id;
-	GtkSettings *settings;
-	GList       *boxes_views;
+  EmpathyChatTheme *selected;
 } EmpathyThemeManagerPriv;
 
 enum {
@@ -63,15 +62,117 @@ enum {
 
 static guint signals[LAST_SIGNAL] = { 0 };
 
-static const gchar *themes[] = {
-	"classic", N_("Classic"),
-	"simple", N_("Simple"),
-	"clean", N_("Clean"),
-	"blue", N_("Blue"),
-	NULL
-};
-
 G_DEFINE_TYPE (EmpathyThemeManager, empathy_theme_manager, G_TYPE_OBJECT);
+
+EmpathyThemeManager *
+empathy_theme_manager_get (void)
+{
+	static EmpathyThemeManager *manager = NULL;
+
+  if (!manager)
+    {
+      manager = g_object_new (EMPATHY_TYPE_THEME_MANAGER, NULL);
+    }
+
+  return manager;
+}
+
+EmpathyChatView *
+empathy_theme_manager_create_view (EmpathyThemeManager *manager)
+{
+	EmpathyThemeManagerPriv *priv = GET_PRIV (manager);
+
+	g_return_val_if_fail (EMPATHY_IS_THEME_MANAGER (manager), NULL);
+
+  if (!priv->selected)
+    {
+      /* FIXME: use the first theme as selected theme */
+      return NULL;
+    }
+
+  return empathy_chat_theme_create_view (priv->selected);
+}
+
+static void
+empathy_theme_manager_add_theme (EmpathyThemeManager *self,
+    EmpathyChatTheme *theme)
+{
+  GtkTreeIter iter;
+  
+  /* FIXME: check if theme is already present? */
+  gtk_tree_store_append (GTK_TREE_STORE (self), &iter, NULL);
+  gtk_tree_store_set (GTK_TREE_STORE (self), &iter,
+      EMPATHY_THEME_MANAGER_NAME, empathy_chat_theme_get_name (theme),
+      EMPATHY_THEME_MANAGER_THEME, theme,
+      -1);
+}
+
+static void
+theme_manager_finalize (GObject *object)
+{
+#if 0
+  EmpathyThemeManagerPriv *priv = GET_PRIV (object);
+
+  empathy_conf_notify_remove (empathy_conf_get (), priv->name_notify_id);
+  g_free (priv->name);
+  empathy_conf_notify_remove (empathy_conf_get (), priv->adium_path_notify_id);
+  g_free (priv->adium_path);
+#endif
+
+  G_OBJECT_CLASS (empathy_theme_manager_parent_class)->finalize (object);
+}
+
+static void
+empathy_theme_manager_class_init (EmpathyThemeManagerClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  signals[THEME_CHANGED] = g_signal_new ("theme-changed",
+      G_OBJECT_CLASS_TYPE (object_class),
+      G_SIGNAL_RUN_LAST,
+      0,
+      NULL, NULL,
+      g_cclosure_marshal_VOID__VOID,
+      G_TYPE_NONE,
+      0);
+
+  g_type_class_add_private (object_class, sizeof (EmpathyThemeManagerPriv));
+
+  object_class->finalize = theme_manager_finalize;
+}
+
+static void
+empathy_theme_manager_init (EmpathyThemeManager *self)
+{
+  GList *i;
+  GList *themes;
+  EmpathyThemeManagerPriv *priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      EMPATHY_TYPE_THEME_MANAGER, EmpathyThemeManagerPriv);
+
+  /* setup the columns */
+  GType types[] = {
+    G_TYPE_STRING,            /* Display name */
+    //GDK_TYPE_PIXBUF,          /* Preview */
+    EMPATHY_TYPE_CHAT_THEME   /* The chat theme */
+  };
+
+  self->priv = priv;
+
+	gtk_list_store_set_column_types (GTK_LIST_STORE (self),
+	    EMPATHY_THEME_MANAGER_COUNT, types);
+
+  /* discover all themes */
+  themes = empathy_classic_chat_theme_discover ();
+  for (i = themes; i; i=i->next)
+    {
+      empathy_theme_manager_add_theme (self, i->data);
+    }
+}
+
+
+#if 0
+
+/* OLD STUFF, LET's MOVE IT! */
 
 static void
 theme_manager_gdk_color_to_hex (GdkColor *gdk_color, gchar *str_color)
@@ -81,57 +182,6 @@ theme_manager_gdk_color_to_hex (GdkColor *gdk_color, gchar *str_color)
 		    gdk_color->red >> 8,
 		    gdk_color->green >> 8,
 		    gdk_color->blue >> 8);
-}
-
-static EmpathyThemeIrc *
-theme_manager_create_irc_view (EmpathyThemeManager *manager)
-{
-	EmpathyChatTextView *view;
-	EmpathyThemeIrc     *theme;
-
-	theme = empathy_theme_irc_new ();
-	view = EMPATHY_CHAT_TEXT_VIEW (theme);
-
-	/* Define base tags */
-	empathy_chat_text_view_tag_set (view, EMPATHY_CHAT_TEXT_VIEW_TAG_SPACING,
-					"size", 2000,
-					NULL);
-	empathy_chat_text_view_tag_set (view, EMPATHY_CHAT_TEXT_VIEW_TAG_TIME,
-					"foreground", "darkgrey",
-					"justification", GTK_JUSTIFY_CENTER,
-					NULL);
-	empathy_chat_text_view_tag_set (view, EMPATHY_CHAT_TEXT_VIEW_TAG_ACTION,
-					"foreground", "brown4",
-					"style", PANGO_STYLE_ITALIC,
-					NULL);
-	empathy_chat_text_view_tag_set (view, EMPATHY_CHAT_TEXT_VIEW_TAG_BODY,
-					"foreground-set", FALSE,
-					NULL);
-	empathy_chat_text_view_tag_set (view, EMPATHY_CHAT_TEXT_VIEW_TAG_EVENT,
-					"foreground", "PeachPuff4",
-					"justification", GTK_JUSTIFY_LEFT,
-					NULL);
-	empathy_chat_text_view_tag_set (view, EMPATHY_CHAT_TEXT_VIEW_TAG_LINK,
-					"foreground", "steelblue",
-					"underline", PANGO_UNDERLINE_SINGLE,
-					NULL);
-	empathy_chat_text_view_tag_set (view, EMPATHY_CHAT_TEXT_VIEW_TAG_HIGHLIGHT,
-					"background", "yellow",
-					NULL);
-
-	/* Define IRC tags */
-	empathy_chat_text_view_tag_set (view, EMPATHY_THEME_IRC_TAG_NICK_SELF,
-					"foreground", "sea green",
-					NULL);
-	empathy_chat_text_view_tag_set (view, EMPATHY_THEME_IRC_TAG_NICK_OTHER,
-					"foreground", "skyblue4",
-					NULL);
-	empathy_chat_text_view_tag_set (view, EMPATHY_THEME_IRC_TAG_NICK_HIGHLIGHT,
-					"foreground", "indian red",
-					"weight", PANGO_WEIGHT_BOLD,
-					NULL);
-
-	return theme;
 }
 
 static void
@@ -319,220 +369,6 @@ theme_manager_update_boxes_theme (EmpathyThemeManager *manager,
 	}
 }
 
-EmpathyChatView *
-empathy_theme_manager_create_view (EmpathyThemeManager *manager)
-{
-	EmpathyThemeManagerPriv *priv = GET_PRIV (manager);
-	EmpathyThemeBoxes       *theme;
-
-	g_return_val_if_fail (EMPATHY_IS_THEME_MANAGER (manager), NULL);
-
-	DEBUG ("Using theme %s", priv->name);
-
-#ifdef HAVE_WEBKIT
-	if (strcmp (priv->name, "adium") == 0)  {
-		if (empathy_adium_path_is_valid (priv->adium_path)) {
-			static EmpathyAdiumData *data = NULL;
-			EmpathyThemeAdium *theme_adium;
-
-			if (data &&
-			    !tp_strdiff (empathy_adium_data_get_path (data),
-					 priv->adium_path)) {
-				/* Theme did not change, reuse data */
-				theme_adium = empathy_theme_adium_new (data);
-				return EMPATHY_CHAT_VIEW (theme_adium);
-			}
-
-			/* Theme changed, drop old data if any and
-			 * load a new one */
-			if (data) {
-				empathy_adium_data_unref (data);
-				data = NULL;
-			}
-
-			data = empathy_adium_data_new (priv->adium_path);
-			theme_adium = empathy_theme_adium_new (data);
-			return EMPATHY_CHAT_VIEW (theme_adium);
-		} else {
-			/* The adium path is not valid, fallback to classic theme */
-			return EMPATHY_CHAT_VIEW (theme_manager_create_irc_view (manager));
-		}
-	}
-#endif
-
-	if (strcmp (priv->name, "classic") == 0)  {
-		return EMPATHY_CHAT_VIEW (theme_manager_create_irc_view (manager));
-	}
-
-	theme = theme_manager_create_boxes_view (manager);
-	theme_manager_update_boxes_theme (manager, theme);
-
-	return EMPATHY_CHAT_VIEW (theme);
-}
-
-static gboolean
-theme_manager_ensure_theme_exists (const gchar *name)
-{
-	gint i;
-
-	if (EMP_STR_EMPTY (name)) {
-		return FALSE;
-	}
-
-	if (strcmp ("adium", name) == 0) {
-		return TRUE;
-	}
-
-	for (i = 0; themes[i]; i += 2) {
-		if (strcmp (themes[i], name) == 0) {
-			return TRUE;
-		}
-	}
-
-	return FALSE;
-}
-
-static void
-theme_manager_notify_name_cb (EmpathyConf *conf,
-			      const gchar *key,
-			      gpointer     user_data)
-{
-	EmpathyThemeManager     *manager = EMPATHY_THEME_MANAGER (user_data);
-	EmpathyThemeManagerPriv *priv = GET_PRIV (manager);
-	gchar                   *name = NULL;
-
-	if (!empathy_conf_get_string (conf, key, &name) ||
-	    !theme_manager_ensure_theme_exists (name) ||
-	    !tp_strdiff (priv->name, name)) {
-		if (!priv->name) {
-			priv->name = g_strdup ("classic");
-		}
-
-		g_free (name);
-		return;
-	}
-
-	g_free (priv->name);
-	priv->name = name;
-
-	if (!tp_strdiff (priv->name, "simple") ||
-	    !tp_strdiff (priv->name, "clean") ||
-	    !tp_strdiff (priv->name, "blue")) {
-		GList *l;
-
-		/* The theme changes to a boxed one, we can update boxed views */
-		for (l = priv->boxes_views; l; l = l->next) {
-			theme_manager_update_boxes_theme (manager,
-							  EMPATHY_THEME_BOXES (l->data));
-		}
-	}
-
-	g_signal_emit (manager, signals[THEME_CHANGED], 0, NULL);
-}
-
-static void
-theme_manager_notify_adium_path_cb (EmpathyConf *conf,
-				    const gchar *key,
-				    gpointer     user_data)
-{
-	EmpathyThemeManager     *manager = EMPATHY_THEME_MANAGER (user_data);
-	EmpathyThemeManagerPriv *priv = GET_PRIV (manager);
-	gchar                   *adium_path = NULL;
-
-	if (!empathy_conf_get_string (conf, key, &adium_path) ||
-	    !tp_strdiff (priv->adium_path, adium_path)) {
-		g_free (adium_path);
-		return;
-	}
-
-	g_free (priv->adium_path);
-	priv->adium_path = adium_path;
-
-	g_signal_emit (manager, signals[THEME_CHANGED], 0, NULL);
-}
-
-static void
-theme_manager_finalize (GObject *object)
-{
-	EmpathyThemeManagerPriv *priv = GET_PRIV (object);
-	GList                   *l;
-
-	empathy_conf_notify_remove (empathy_conf_get (), priv->name_notify_id);
-	g_free (priv->name);
-	empathy_conf_notify_remove (empathy_conf_get (), priv->adium_path_notify_id);
-	g_free (priv->adium_path);
-
-	for (l = priv->boxes_views; l; l = l->next) {
-		g_object_weak_unref (G_OBJECT (l->data),
-				     theme_manager_boxes_weak_notify_cb,
-				     object);
-	}
-	g_list_free (priv->boxes_views);
-
-	G_OBJECT_CLASS (empathy_theme_manager_parent_class)->finalize (object);
-}
-
-static void
-empathy_theme_manager_class_init (EmpathyThemeManagerClass *klass)
-{
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-	signals[THEME_CHANGED] =
-		g_signal_new ("theme-changed",
-			      G_OBJECT_CLASS_TYPE (object_class),
-			      G_SIGNAL_RUN_LAST,
-			      0,
-			      NULL, NULL,
-			      g_cclosure_marshal_VOID__VOID,
-			      G_TYPE_NONE,
-			      0);
-
-	g_type_class_add_private (object_class, sizeof (EmpathyThemeManagerPriv));
-
-	object_class->finalize = theme_manager_finalize;
-}
-
-static void
-empathy_theme_manager_init (EmpathyThemeManager *manager)
-{
-	EmpathyThemeManagerPriv *priv = G_TYPE_INSTANCE_GET_PRIVATE (manager,
-		EMPATHY_TYPE_THEME_MANAGER, EmpathyThemeManagerPriv);
-
-	manager->priv = priv;
-
-	/* Take the theme name and track changes */
-	priv->name_notify_id =
-		empathy_conf_notify_add (empathy_conf_get (),
-					 EMPATHY_PREFS_CHAT_THEME,
-					 theme_manager_notify_name_cb,
-					 manager);
-	theme_manager_notify_name_cb (empathy_conf_get (),
-				      EMPATHY_PREFS_CHAT_THEME,
-				      manager);
-
-	/* Take the adium path and track changes */
-	priv->adium_path_notify_id =
-		empathy_conf_notify_add (empathy_conf_get (),
-					 EMPATHY_PREFS_CHAT_ADIUM_PATH,
-					 theme_manager_notify_adium_path_cb,
-					 manager);
-	theme_manager_notify_adium_path_cb (empathy_conf_get (),
-					    EMPATHY_PREFS_CHAT_ADIUM_PATH,
-					    manager);
-}
-
-EmpathyThemeManager *
-empathy_theme_manager_get (void)
-{
-	static EmpathyThemeManager *manager = NULL;
-
-	if (!manager) {
-		manager = g_object_new (EMPATHY_TYPE_THEME_MANAGER, NULL);
-	}
-
-	return manager;
-}
-
 const gchar **
 empathy_theme_manager_get_themes (void)
 {
@@ -623,27 +459,6 @@ empathy_theme_manager_theme_file_loaded (GObject *source_object,
       g_message ("Loaded the contents of %s", filename);
     }
   g_free (filename);
-
-#if 0
-	struct archive *zip;
-
-  /* parse the archive contents */
-  zip = archive_read_new ();
-  archive_read_support_compression_all (zip);
-  archive_read_support_format_all (zip);
-  if (archive_read_open_memory (zip, (void *) contents, length) != 0)
-    {
-      /* FIXME: show a nice error dialog */
-      gchar *filename = g_file_get_uri (file);
-      g_warning ("Failed to read archive '%s'", filename); 
-      g_free (filename);
-      return;
-    }
-
-  /* write the decompressed files to disc */
-
-	return zip;
-#endif
 }
 
 gboolean
@@ -676,3 +491,4 @@ empathy_theme_manager_install_theme (gchar *path)
 
   return TRUE;
 }
+#endif

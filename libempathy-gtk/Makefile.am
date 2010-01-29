@@ -40,8 +40,10 @@ libempathy_gtk_handwritten_source =            	\
 	empathy-cell-renderer-expander.c	\
 	empathy-cell-renderer-text.c		\
 	empathy-chat-text-view.c		\
+	empathy-chat-theme.c				\
 	empathy-chat-view.c			\
 	empathy-chat.c				\
+	empathy-classic-chat-theme.c	\
 	empathy-conf.c				\
 	empathy-contact-dialogs.c		\
 	empathy-contact-list-store.c		\
@@ -86,8 +88,10 @@ libempathy_gtk_headers =			\
 	empathy-cell-renderer-expander.h	\
 	empathy-cell-renderer-text.h		\
 	empathy-chat-text-view.h		\
+	empathy-chat-theme.h			\
 	empathy-chat-view.h			\
 	empathy-chat.h				\
+	empathy-classic-chat-theme.h	\
 	empathy-conf.h				\
 	empathy-contact-dialogs.h		\
 	empathy-contact-list-store.h		\
