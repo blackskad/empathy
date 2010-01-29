@@ -78,16 +78,24 @@ empathy_theme_manager_get (void)
 }
 
 EmpathyChatView *
-empathy_theme_manager_create_view (EmpathyThemeManager *manager)
+empathy_theme_manager_create_view (EmpathyThemeManager *self)
 {
-	EmpathyThemeManagerPriv *priv = GET_PRIV (manager);
+	EmpathyThemeManagerPriv *priv = GET_PRIV (self);
 
-	g_return_val_if_fail (EMPATHY_IS_THEME_MANAGER (manager), NULL);
+	g_return_val_if_fail (EMPATHY_IS_THEME_MANAGER (self), NULL);
 
   if (!priv->selected)
     {
-      /* FIXME: use the first theme as selected theme */
-      return NULL;
+      GtkTreeIter iter;
+      
+      if (!gtk_tree_model_get_iter_first (GTK_TREE_MODEL (self), &iter))
+        {
+          return NULL;
+        }
+      gtk_tree_model_get (GTK_TREE_MODEL (self), &iter,
+          EMPATHY_THEME_MANAGER_THEME, priv->selected);
+
+      /* FIXME: save in gconf too? */
     }
 
   return empathy_chat_theme_create_view (priv->selected);
