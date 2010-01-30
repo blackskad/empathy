@@ -34,13 +34,15 @@ typedef struct _EmpathyChatThemePriv EmpathyChatThemePriv;
 struct _EmpathyChatThemePriv
 {
   gchar *name;
+  GList *variants;
   GdkPixbuf *thumbnail;
 };
 
 typedef enum {
   PROP_0,
   PROP_THEME_NAME,
-  PROP_THEME_THUMBNAIL
+  PROP_THEME_THUMBNAIL,
+  PROP_THEME_VARIANTS
 } EmpathyChatThemeProperty;
 
 EmpathyChatView *
@@ -62,6 +64,7 @@ empathy_chat_theme_get_name (EmpathyChatTheme *theme)
   return g_strdup (priv->name);
 }
 
+#if 0
 static void
 empathy_chat_theme_create_thumbnail (EmpathyChatTheme *theme)
 {
@@ -96,6 +99,7 @@ empathy_chat_theme_load_thumbnail (EmpathyChatTheme *theme)
       empathy_chat_theme_create_thumbnail (theme);
     }
 }
+#endif
 
 GdkPixbuf *
 empathy_chat_theme_get_thumbnail (EmpathyChatTheme *theme)
@@ -103,7 +107,9 @@ empathy_chat_theme_get_thumbnail (EmpathyChatTheme *theme)
   EmpathyChatThemePriv *priv = GET_PRIV (theme);
   if (!priv->thumbnail)
     {
-      empathy_chat_theme_load_thumbnail (theme);
+      /* Taking off screen snapshots seems to be something for the future.
+       * So don't do anything if the thumbnail wasn't set on construction.
+      empathy_chat_theme_load_thumbnail (theme); */
     }
   return gdk_pixbuf_copy (priv->thumbnail);
 }
@@ -134,6 +140,7 @@ empathy_chat_theme_set_property (GObject *object,
     const GValue *value,
     GParamSpec *pspec)
 {
+  GList *variants;
   EmpathyChatThemePriv *priv = GET_PRIV (object);
 
   switch (param_id)
@@ -145,6 +152,15 @@ empathy_chat_theme_set_property (GObject *object,
       case PROP_THEME_THUMBNAIL:
         g_assert (priv->thumbnail == NULL);
         priv->thumbnail = gdk_pixbuf_copy (g_value_get_object (value));
+        break;
+      case PROP_THEME_VARIANTS:
+        g_assert (priv->variants == NULL);
+        /* make a deep copy of the list */
+        variants = g_value_get_object (value);
+        for (; variants; variants = variants->next)
+        {
+          priv->variants = g_list_append (priv->variants, g_strdup (variants->data));
+        }
         break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -175,10 +191,16 @@ empathy_chat_theme_class_init (EmpathyChatThemeClass *class)
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 	g_object_class_install_property (object_class, PROP_THEME_THUMBNAIL,
-      g_param_spec_object ("theme-preview",
-          "The theme preview",
-          "A small preview of the theme",
+      g_param_spec_object ("theme-thumbnail",
+          "The theme thumbnail",
+          "A small thumbnail of the theme",
           GDK_TYPE_PIXBUF,
+          G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+	g_object_class_install_property (object_class, PROP_THEME_THUMBNAIL,
+      g_param_spec_pointer ("theme-variants",
+          "The theme variants",
+          "A list of strings with the names of the theme variants",
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_type_class_add_private (object_class, sizeof (EmpathyChatThemePriv));

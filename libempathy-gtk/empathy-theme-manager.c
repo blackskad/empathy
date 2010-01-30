@@ -39,6 +39,7 @@
 #include "empathy-chat-theme.h"
 #include "empathy-chat-text-view.h"
 #include "empathy-classic-chat-theme.h"
+#include "empathy-boxed-chat-theme.h"
 #include "empathy-theme-boxes.h"
 #include "empathy-theme-irc.h"
 
@@ -170,6 +171,12 @@ empathy_theme_manager_init (EmpathyThemeManager *self)
 
   /* discover all themes */
   themes = empathy_classic_chat_theme_discover ();
+  for (i = themes; i; i=i->next)
+    {
+      empathy_theme_manager_add_theme (self, i->data);
+    }
+
+  themes = empathy_boxed_chat_theme_discover ();
   for (i = themes; i; i=i->next)
     {
       empathy_theme_manager_add_theme (self, i->data);
