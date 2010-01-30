@@ -108,7 +108,7 @@ empathy_classic_chat_theme_init (EmpathyClassicChatTheme *theme)
 static void
 empathy_classic_chat_theme_class_init (EmpathyClassicChatThemeClass *theme_class)
 {
-  EmpathyChatThemeClass *chat_theme_class = EMPATHY_CHAT_THEME_GET_CLASS (theme_class);
+  EmpathyChatThemeClass *chat_theme_class = EMPATHY_CHAT_THEME_CLASS (theme_class);
 
   chat_theme_class->create_view = empathy_classic_chat_theme_create_view;
 }
