@@ -1115,7 +1115,7 @@ preferences_themes_setup (EmpathyPreferences *preferences)
 	}
 #endif
 	gtk_icon_view_set_text_column (iconview, EMPATHY_THEME_MANAGER_NAME);
-	/* gtk_icon_view_set_pixbuf_column (iconview, COL_COMBO_PREVIEW); */
+	gtk_icon_view_set_pixbuf_column (iconview, EMPATHY_THEME_MANAGER_THUMBNAIL);
 
 	gtk_icon_view_set_model (iconview,
 		GTK_TREE_MODEL (empathy_theme_manager_get ()));

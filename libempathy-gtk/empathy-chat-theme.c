@@ -34,11 +34,13 @@ typedef struct _EmpathyChatThemePriv EmpathyChatThemePriv;
 struct _EmpathyChatThemePriv
 {
   gchar *name;
+  GdkPixbuf *thumbnail;
 };
 
 typedef enum {
   PROP_0,
-  PROP_THEME_NAME
+  PROP_THEME_NAME,
+  PROP_THEME_THUMBNAIL
 } EmpathyChatThemeProperty;
 
 EmpathyChatView *
@@ -61,6 +63,52 @@ empathy_chat_theme_get_name (EmpathyChatTheme *theme)
 }
 
 static void
+empathy_chat_theme_create_thumbnail (EmpathyChatTheme *theme)
+{
+  GdkPixmap *full;
+  EmpathyChatView *view;
+  GdkRectangle rect = {0, 0, 100, 100};
+  
+  EmpathyChatThemePriv *priv = GET_PRIV (theme);
+
+  /* replay the dummy conversation */
+  view = empathy_chat_theme_create_view (theme);
+
+  /* get a snapshot and create the preview, the easy way...
+   * FIXME: develop an algorithm to discover the interesting parts of an image
+   * */
+  full = gtk_widget_get_snapshot (GTK_WIDGET(view), &rect);
+  priv->thumbnail = gdk_pixbuf_get_from_drawable (NULL, full, NULL,
+      0, 0, 0, 0, 100, 100);
+
+  /* save the preview to the cache */
+}
+
+static void
+empathy_chat_theme_load_thumbnail (EmpathyChatTheme *theme)
+{
+  if (FALSE)
+    {
+      /* load preview from cache file */
+    }
+  else
+    {
+      empathy_chat_theme_create_thumbnail (theme);
+    }
+}
+
+GdkPixbuf *
+empathy_chat_theme_get_thumbnail (EmpathyChatTheme *theme)
+{
+  EmpathyChatThemePriv *priv = GET_PRIV (theme);
+  if (!priv->thumbnail)
+    {
+      empathy_chat_theme_load_thumbnail (theme);
+    }
+  return gdk_pixbuf_copy (priv->thumbnail);
+}
+
+static void
 empathy_chat_theme_get_property(GObject *object,
     guint param_id,
     GValue *value,
@@ -70,6 +118,9 @@ empathy_chat_theme_get_property(GObject *object,
     {
       case PROP_THEME_NAME:
         /* FIXME: return the name */
+        break;
+      case PROP_THEME_THUMBNAIL:
+        /* FIXME: return the preview */
         break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -90,6 +141,13 @@ empathy_chat_theme_set_property (GObject *object,
       case PROP_THEME_NAME:
         g_assert (priv->name == NULL);
         priv->name = g_strdup (g_value_get_string (value)); 
+        break;
+      case PROP_THEME_THUMBNAIL:
+        g_assert (priv->thumbnail == NULL);
+        priv->thumbnail = gdk_pixbuf_copy (g_value_get_object (value));
+        break;
+      default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
         break;
     }
 }
@@ -114,6 +172,13 @@ empathy_chat_theme_class_init (EmpathyChatThemeClass *class)
           "The theme name",
           "The name of the theme",
           NULL,
+          G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+	g_object_class_install_property (object_class, PROP_THEME_THUMBNAIL,
+      g_param_spec_object ("theme-preview",
+          "The theme preview",
+          "A small preview of the theme",
+          GDK_TYPE_PIXBUF,
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_type_class_add_private (object_class, sizeof (EmpathyChatThemePriv));

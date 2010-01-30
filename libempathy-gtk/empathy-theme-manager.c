@@ -109,6 +109,7 @@ empathy_theme_manager_add_theme (EmpathyThemeManager *self,
   gtk_list_store_append (GTK_LIST_STORE (self), &iter);
   gtk_list_store_set (GTK_LIST_STORE (self), &iter,
       EMPATHY_THEME_MANAGER_NAME, empathy_chat_theme_get_name (theme),
+      EMPATHY_THEME_MANAGER_THUMBNAIL, empathy_chat_theme_get_thumbnail (theme),
       EMPATHY_THEME_MANAGER_THEME, theme,
       -1);
 }
@@ -158,7 +159,7 @@ empathy_theme_manager_init (EmpathyThemeManager *self)
   /* setup the columns */
   GType types[] = {
     G_TYPE_STRING,            /* Display name */
-    //GDK_TYPE_PIXBUF,          /* Preview */
+    GDK_TYPE_PIXBUF,          /* Thumbnail */
     EMPATHY_TYPE_CHAT_THEME   /* The chat theme */
   };
 
