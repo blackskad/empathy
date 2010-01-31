@@ -68,8 +68,12 @@ struct _EmpathyThemeBoxesColors {
 
 GType              empathy_theme_boxes_get_type   (void) G_GNUC_CONST;
 EmpathyThemeBoxes *empathy_theme_boxes_new        (void);
-void               empathy_theme_boxes_set_colors (EmpathyThemeBoxes *theme,
-                                                   EmpathyThemeBoxesColors *colors);
+
+void empathy_theme_boxes_set_colors        (EmpathyThemeBoxes *theme,
+                                            EmpathyThemeBoxesColors *colors);
+void empathy_theme_boxes_use_system_colors (EmpathyThemeBoxes *theme,
+                                            gboolean use_system_colors);
+
 G_END_DECLS
 
 #endif /* __EMPATHY_THEME_BOXES_H__ */

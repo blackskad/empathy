@@ -46,6 +46,7 @@
 
 #define GET_PRIV(obj) EMPATHY_GET_PRIV (obj, EmpathyThemeBoxes)
 typedef struct {
+	gulong   sigid;
 	gboolean show_avatars;
 } EmpathyThemeBoxesPriv;
 
@@ -468,5 +469,55 @@ empathy_theme_boxes_set_colors (EmpathyThemeBoxes *self,
 	TAG_SET ("paragraph-background", "paragraph-background-set", colors->header_line_background);
 
 	#undef TAG_SET
+}
+
+static void
+theme_boxes_gdk_color_to_hex (GdkColor *gdk_color, gchar *str_color)
+{
+	g_snprintf (str_color, 10,
+		    "#%02x%02x%02x",
+		    gdk_color->red >> 8,
+		    gdk_color->green >> 8,
+		    gdk_color->blue >> 8);
+}
+
+static void
+on_style_set_cb (GtkWidget *widget, GtkStyle *previous_style, gpointer data)
+{
+	GtkStyle *style;
+	gchar     color1[10];
+	gchar     color2[10];
+	gchar     color3[10];
+	gchar     color4[10];
+	EmpathyThemeBoxesColors colors = {NULL, NULL, NULL, NULL,
+		"darkgrey", "darkgrey", NULL, NULL, NULL, NULL};
+
+	style = gtk_widget_get_style (GTK_WIDGET (widget));
+
+	theme_boxes_gdk_color_to_hex (&style->base[GTK_STATE_SELECTED], color1);
+	theme_boxes_gdk_color_to_hex (&style->bg[GTK_STATE_SELECTED], color2);
+	theme_boxes_gdk_color_to_hex (&style->dark[GTK_STATE_SELECTED], color3);
+	theme_boxes_gdk_color_to_hex (&style->fg[GTK_STATE_SELECTED], color4);
+
+	colors.header_foreground = color4;
+	colors.header_background = color2;
+	colors.header_line_background = color3;
+	colors.action_foreground = color1;
+	colors.link_foreground = color1;
+
+	empathy_theme_boxes_set_colors (EMPATHY_THEME_BOXES (widget), &colors);
+}
+
+void
+empathy_theme_boxes_use_system_colors (EmpathyThemeBoxes *theme,
+	gboolean use_system_colors)
+{
+	EmpathyThemeBoxesPriv *priv = GET_PRIV (theme);
+	if (use_system_colors) {
+		priv->sigid = g_signal_connect (G_OBJECT (theme), "style-set",
+		                                G_CALLBACK (on_style_set_cb), NULL);
+	} else {
+		g_signal_handler_disconnect (G_OBJECT (theme), priv->sigid);
+	}
 }
 

@@ -29,6 +29,11 @@
 
 G_DEFINE_TYPE (EmpathyBoxedChatTheme, empathy_boxed_chat_theme, EMPATHY_TYPE_CHAT_THEME);
 
+#if 0
+EmpathyThemeBoxesColors simple_colors = {
+}
+#endif
+
 EmpathyThemeBoxesColors clean_colors = {
     "black",    /* header_foreground */
     "#efefdf",  /* header_background */
@@ -42,16 +47,21 @@ EmpathyThemeBoxesColors clean_colors = {
     NULL        /* highlight_foreground */
 };
 
-#if 0
-EmpathyThemeBoxesColors simple_colors = {
-}
-
 EmpathyThemeBoxesColors blue_colors = {
-}
-#endif
+    "black",    /* header_foreground */
+    "#88a2b4",  /* header_background */
+    "#7f96a4",  /* header_line_background */
+    "brown4",   /* action_foreground */
+    "darkgrey", /* time_foreground */
+    "#7f96a4",  /* event_foreground */
+    "#49789e",  /* link_foreground */
+    "black",    /* text_foreground */
+    "#adbdc8",  /* text_background */
+    "black"     /* highlight_foreground */
+};
 
 static EmpathyChatTheme *
-empathy_boxed_chat_theme_new ()
+empathy_boxed_chat_theme_new (gchar *name)
 {
   EmpathyChatTheme *theme;
   GList *variants = NULL;
@@ -62,8 +72,8 @@ empathy_boxed_chat_theme_new ()
   variants = g_list_append (variants, "blue");
 
   theme = EMPATHY_CHAT_THEME (g_object_new (EMPATHY_TYPE_BOXED_CHAT_THEME,
-      "theme-name", "boxed",
-      "theme-variants" , variants,
+      "theme-name", name,
+      //"theme-variants" , variants,
       NULL));
 
   g_list_free (variants);
@@ -77,7 +87,14 @@ empathy_boxed_chat_theme_discover ()
   EmpathyChatTheme *theme;
   GList *themes = NULL;
 
-  theme = empathy_boxed_chat_theme_new ();
+  /* FIXME: use theme variants instead of new theme instances */
+  theme = empathy_boxed_chat_theme_new ("clean");
+  themes = g_list_append (themes, theme);
+
+  theme = empathy_boxed_chat_theme_new ("blue");
+  themes = g_list_append (themes, theme);
+
+  theme = empathy_boxed_chat_theme_new ("simple");
   themes = g_list_append (themes, theme);
 
   return themes;
@@ -87,13 +104,26 @@ static EmpathyChatView *
 empathy_boxed_chat_theme_create_view (EmpathyChatTheme *theme)
 {
   EmpathyThemeBoxes *view;
+  gchar *name;
 
   g_return_val_if_fail (EMPATHY_IS_BOXED_CHAT_THEME (theme), NULL);
 
   view = empathy_theme_boxes_new ();
 
   /* FIXME: Apply the correct colors for the selected variant */
-  empathy_theme_boxes_set_colors (view, &clean_colors);
+  name = empathy_chat_theme_get_name (theme);  
+  if (g_strcmp0 (name, "clean") == 0)
+    {
+      empathy_theme_boxes_set_colors (view, &clean_colors);
+    }
+  else if (g_strcmp0 (name, "blue") == 0)
+    {
+      empathy_theme_boxes_set_colors (view, &blue_colors);
+    }
+  else
+    {
+      empathy_theme_boxes_use_system_colors (view, TRUE);
+    }
 
   return EMPATHY_CHAT_VIEW (view);
 }
