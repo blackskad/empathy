@@ -246,100 +246,6 @@ theme_manager_create_boxes_view (EmpathyThemeManager *manager)
 }
 
 static void
-theme_manager_update_boxes_tags (EmpathyThemeBoxes *theme,
-				 const gchar       *header_foreground,
-				 const gchar       *header_background,
-				 const gchar       *header_line_background,
-				 const gchar       *action_foreground,
-				 const gchar       *time_foreground,
-				 const gchar       *event_foreground,
-				 const gchar       *link_foreground,
-				 const gchar       *text_foreground,
-				 const gchar       *text_background,
-				 const gchar       *highlight_foreground)
-
-{
-	EmpathyChatTextView *view = EMPATHY_CHAT_TEXT_VIEW (theme);
-	GtkTextTag          *tag;
-
-	DEBUG ("Update view with new colors:\n"
-		"header_foreground = %s\n"
-		"header_background = %s\n"
-		"header_line_background = %s\n"
-		"action_foreground = %s\n"
-		"time_foreground = %s\n"
-		"event_foreground = %s\n"
-		"link_foreground = %s\n"
-		"text_foreground = %s\n"
-		"text_background = %s\n"
-		"highlight_foreground = %s\n",
-		header_foreground, header_background, header_line_background,
-		action_foreground, time_foreground, event_foreground,
-		link_foreground, text_foreground, text_background,
-		highlight_foreground);
-
-
-	/* FIXME: GtkTextTag don't support to set color properties to NULL.
-	 * See bug #542523 */
-
-	#define TAG_SET(prop, prop_set, value) \
-		if (value != NULL) { \
-			g_object_set (tag, prop, value, NULL); \
-		} else { \
-			g_object_set (tag, prop_set, FALSE, NULL); \
-		}
-
-	/* Define base tags */
-	tag = empathy_chat_text_view_tag_set (view, EMPATHY_CHAT_TEXT_VIEW_TAG_HIGHLIGHT,
-					      "weight", PANGO_WEIGHT_BOLD,
-					      "pixels-above-lines", 4,
-					      NULL);
-	TAG_SET ("paragraph-background", "paragraph-background-set", text_background);
-	TAG_SET ("foreground", "foreground-set", highlight_foreground);
-
-	empathy_chat_text_view_tag_set (view, EMPATHY_CHAT_TEXT_VIEW_TAG_SPACING,
-					"size", 3000,
-					"pixels-above-lines", 8,
-					NULL);
-	tag = empathy_chat_text_view_tag_set (view, EMPATHY_CHAT_TEXT_VIEW_TAG_TIME,
-					      "justification", GTK_JUSTIFY_CENTER,
-					      NULL);
-	TAG_SET ("foreground", "foreground-set", time_foreground);
-	tag = empathy_chat_text_view_tag_set (view, EMPATHY_CHAT_TEXT_VIEW_TAG_ACTION,
-					      "style", PANGO_STYLE_ITALIC,
-					      "pixels-above-lines", 4,
-					      NULL);
-	TAG_SET ("paragraph-background", "paragraph-background-set", text_background);
-	TAG_SET ("foreground", "foreground-set", action_foreground);
-	tag = empathy_chat_text_view_tag_set (view, EMPATHY_CHAT_TEXT_VIEW_TAG_BODY,
-					      "pixels-above-lines", 4,
-					      NULL);
-	TAG_SET ("paragraph-background", "paragraph-background-set", text_background);
-	TAG_SET ("foreground", "foreground-set", text_foreground);
-	tag = empathy_chat_text_view_tag_set (view, EMPATHY_CHAT_TEXT_VIEW_TAG_EVENT,
-					      "justification", GTK_JUSTIFY_LEFT,
-					      NULL);
-	TAG_SET ("foreground", "foreground-set", event_foreground);
-	tag = empathy_chat_text_view_tag_set (view, EMPATHY_CHAT_TEXT_VIEW_TAG_LINK,
-					      "underline", PANGO_UNDERLINE_SINGLE,
-					      NULL);
-	TAG_SET ("foreground", "foreground-set", link_foreground);
-
-	/* Define BOXES tags */
-	tag = empathy_chat_text_view_tag_set (view, EMPATHY_THEME_BOXES_TAG_HEADER,
-					      "weight", PANGO_WEIGHT_BOLD,
-					      NULL);
-	TAG_SET ("foreground", "foreground-set", header_foreground);
-	TAG_SET ("paragraph-background", "paragraph-background-set", header_background);
-	tag = empathy_chat_text_view_tag_set (view, EMPATHY_THEME_BOXES_TAG_HEADER_LINE,
-					      "size", 1,
-					      NULL);
-	TAG_SET ("paragraph-background", "paragraph-background-set", header_line_background);
-
-	#undef TAG_SET
-}
-
-static void
 on_style_set_cb (GtkWidget *widget, GtkStyle *previous_style, gpointer data)
 {
 	GtkStyle *style;
@@ -378,19 +284,6 @@ theme_manager_update_boxes_theme (EmpathyThemeManager *manager,
 		g_signal_connect (G_OBJECT (theme), "style-set",
 				  G_CALLBACK (on_style_set_cb), theme);
 	}
-	else if (strcmp (priv->name, "clean") == 0) {
-		theme_manager_update_boxes_tags (theme,
-						 "black",    /* header_foreground */
-						 "#efefdf",  /* header_background */
-						 "#e3e3d3",  /* header_line_background */
-						 "brown4",   /* action_foreground */
-						 "darkgrey", /* time_foreground */
-						 "darkgrey", /* event_foreground */
-						 "#49789e",  /* link_foreground */
-						 NULL,       /* text_foreground */
-						 NULL,       /* text_background */
-						 NULL);      /* highlight_foreground */
-	}
 	else if (strcmp (priv->name, "blue") == 0) {
 		theme_manager_update_boxes_tags (theme,
 						 "black",    /* header_foreground */
@@ -404,12 +297,6 @@ theme_manager_update_boxes_theme (EmpathyThemeManager *manager,
 						 "#adbdc8",  /* text_background */
 						 "black");   /* highlight_foreground */
 	}
-}
-
-const gchar **
-empathy_theme_manager_get_themes (void)
-{
-	return themes;
 }
 
 #ifdef HAVE_WEBKIT

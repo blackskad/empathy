@@ -37,8 +37,9 @@ G_BEGIN_DECLS
 #define EMPATHY_IS_THEME_BOXES_CLASS(k)     (G_TYPE_CHECK_CLASS_TYPE ((k), EMPATHY_TYPE_THEME_BOXES))
 #define EMPATHY_THEME_BOXES_GET_CLASS(o)    (G_TYPE_INSTANCE_GET_CLASS ((o), EMPATHY_TYPE_THEME_BOXES, EmpathyThemeBoxesClass))
 
-typedef struct _EmpathyThemeBoxes      EmpathyThemeBoxes;
-typedef struct _EmpathyThemeBoxesClass EmpathyThemeBoxesClass;
+typedef struct _EmpathyThemeBoxes       EmpathyThemeBoxes;
+typedef struct _EmpathyThemeBoxesClass  EmpathyThemeBoxesClass;
+typedef struct _EmpathyThemeBoxesColors EmpathyThemeBoxesColors;
 
 struct _EmpathyThemeBoxes {
 	EmpathyChatTextView parent;
@@ -49,12 +50,26 @@ struct _EmpathyThemeBoxesClass {
 	EmpathyChatTextViewClass parent_class;
 };
 
+struct _EmpathyThemeBoxesColors {
+	gchar *header_foreground;
+	gchar *header_background;
+	gchar *header_line_background;
+	gchar *action_foreground;
+	gchar *time_foreground;
+	gchar *event_foreground;
+	gchar *link_foreground;
+	gchar *text_foreground;
+	gchar *text_background;
+	gchar *highlight_foreground;
+};
+
 #define EMPATHY_THEME_BOXES_TAG_HEADER "fancy-header"
 #define EMPATHY_THEME_BOXES_TAG_HEADER_LINE "fancy-header-line"
 
-GType              empathy_theme_boxes_get_type (void) G_GNUC_CONST;
-EmpathyThemeBoxes *empathy_theme_boxes_new      (void);
-
+GType              empathy_theme_boxes_get_type   (void) G_GNUC_CONST;
+EmpathyThemeBoxes *empathy_theme_boxes_new        (void);
+void               empathy_theme_boxes_set_colors (EmpathyThemeBoxes *theme,
+                                                   EmpathyThemeBoxesColors *colors);
 G_END_DECLS
 
 #endif /* __EMPATHY_THEME_BOXES_H__ */

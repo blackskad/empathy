@@ -29,11 +29,21 @@
 
 G_DEFINE_TYPE (EmpathyBoxedChatTheme, empathy_boxed_chat_theme, EMPATHY_TYPE_CHAT_THEME);
 
+EmpathyThemeBoxesColors clean_colors = {
+    "black",    /* header_foreground */
+    "#efefdf",  /* header_background */
+    "#e3e3d3",  /* header_line_background */
+    "brown4",   /* action_foreground */
+    "darkgrey", /* time_foreground */
+    "darkgrey", /* event_foreground */
+    "#49789e",  /* link_foreground */
+    NULL,       /* text_foreground */
+    NULL,       /* text_background */
+    NULL        /* highlight_foreground */
+};
+
 #if 0
 EmpathyThemeBoxesColors simple_colors = {
-}
-
-EmpathyThemeBoxesColors clean_colors = {
 }
 
 EmpathyThemeBoxesColors blue_colors = {
@@ -82,7 +92,8 @@ empathy_boxed_chat_theme_create_view (EmpathyChatTheme *theme)
 
   view = empathy_theme_boxes_new ();
 
-  /* FIXME: Apply the correct colors */
+  /* FIXME: Apply the correct colors for the selected variant */
+  empathy_theme_boxes_set_colors (view, &clean_colors);
 
   return EMPATHY_CHAT_VIEW (view);
 }
