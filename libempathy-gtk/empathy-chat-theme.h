@@ -60,12 +60,10 @@ struct _EmpathyChatThemeClass
 
 GType empathy_chat_theme_get_type (void) G_GNUC_CONST;
 
-gchar *     empathy_chat_theme_get_name      (EmpathyChatTheme *theme);
-GdkPixbuf * empathy_chat_theme_get_thumbnail (EmpathyChatTheme *theme);
-/*
-gchar * empathy_chat_theme_get_selected_variant (EmpathyChatTheme *theme);
-GList * empathy_chat_theme_get_variants         (EmpathyChatTheme *theme);
-*/
+gchar     *empathy_chat_theme_get_name      (EmpathyChatTheme *theme);
+GdkPixbuf *empathy_chat_theme_get_thumbnail (EmpathyChatTheme *theme);
+GList     *empathy_chat_theme_get_variants  (EmpathyChatTheme *theme);
+/* gchar  *empathy_chat_theme_get_selected_variant (EmpathyChatTheme *theme); */
 
 EmpathyChatView  * empathy_chat_theme_create_view (EmpathyChatTheme *theme);
 

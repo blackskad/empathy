@@ -73,7 +73,7 @@ empathy_boxed_chat_theme_new (gchar *name)
 
   theme = EMPATHY_CHAT_THEME (g_object_new (EMPATHY_TYPE_BOXED_CHAT_THEME,
       "theme-name", name,
-      //"theme-variants" , variants,
+      "theme-variants" , variants,
       NULL));
 
   g_list_free (variants);

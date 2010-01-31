@@ -114,6 +114,13 @@ empathy_chat_theme_get_thumbnail (EmpathyChatTheme *theme)
   return gdk_pixbuf_copy (priv->thumbnail);
 }
 
+GList *
+empathy_chat_theme_get_variants (EmpathyChatTheme *theme)
+{
+  EmpathyChatThemePriv *priv = GET_PRIV (theme);
+  return priv->variants;
+}
+
 static void
 empathy_chat_theme_get_property(GObject *object,
     guint param_id,

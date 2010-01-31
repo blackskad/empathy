@@ -54,9 +54,11 @@ typedef struct {
 
 	GtkWidget *checkbutton_show_smileys;
 	GtkWidget *checkbutton_show_contacts_in_rooms;
-	GtkWidget *iconview_chat_theme;
 	GtkWidget *checkbutton_separate_chat_windows;
 	GtkWidget *checkbutton_autoconnect;
+
+	GtkWidget *iconview_chat_theme;
+	GtkWidget *button_theme_edit;
 
 	GtkWidget *checkbutton_sounds_enabled;
 	GtkWidget *checkbutton_sounds_disabled_away;
@@ -990,6 +992,7 @@ preferences_theme_changed_cb (GtkIconView        *iconview,
 
 		if (gtk_tree_model_get_iter (model, &iter, treepath)) {
 			EmpathyChatTheme *theme;
+			GList *variants;
 
 			gtk_tree_model_get (model, &iter,
 					    EMPATHY_THEME_MANAGER_THEME, &theme,
@@ -998,6 +1001,11 @@ preferences_theme_changed_cb (GtkIconView        *iconview,
 			empathy_theme_manager_select (
 				empathy_theme_manager_get (),
 				theme);
+
+			variants = empathy_chat_theme_get_variants (theme);
+			gtk_widget_set_sensitive (preferences->button_theme_edit,
+				!(variants == NULL));
+
 			g_object_unref (theme);
 		}
 		g_list_foreach (selection, (GFunc) gtk_tree_path_free, NULL);
@@ -1047,37 +1055,14 @@ preferences_themes_setup (EmpathyPreferences *preferences)
 	                                      GTK_STOCK_MISSING_IMAGE,
 	                                      GTK_ICON_SIZE_DND, NULL);
 
-	/* Create the model */
-	store = gtk_list_store_new (COL_COMBO_COUNT,
-				    G_TYPE_BOOLEAN, /* Is an Adium theme */
-				    G_TYPE_STRING,  /* Display name */
-				    G_TYPE_STRING,  /* Theme name */
-				    G_TYPE_STRING,  /* Theme path */
-				    GDK_TYPE_PIXBUF); /* Theme preview */
 	gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (store),
 		COL_COMBO_VISIBLE_NAME, GTK_SORT_ASCENDING);
 
 	/* Fill the model */
-	themes = empathy_theme_manager_get_themes ();
-	for (i = 0; themes[i]; i += 2) {
-		GError *error = NULL;
+	if (0) {
 		gchar *theme_icon_name = g_strdup_printf ("theme-%s.png", themes[i]);
 		gchar *theme_icon_path = empathy_file_lookup (theme_icon_name, "src");
 		pixbuf = gdk_pixbuf_new_from_file (theme_icon_path, &error);
-		g_free (theme_icon_path);
-		g_free (theme_icon_name);
-
-		if (error) {
-			pixbuf = dummypixbuf;
-		}
-
-		gtk_list_store_insert_with_values (store, NULL, -1,
-			COL_COMBO_IS_ADIUM, FALSE,
-			COL_COMBO_VISIBLE_NAME, _(themes[i + 1]),
-			COL_COMBO_NAME, themes[i],
-			COL_COMBO_PATH, NULL,
-			COL_COMBO_PREVIEW, pixbuf,
-			-1);
 	}
 
 	adium_themes = empathy_theme_manager_get_adium_themes ();
@@ -1179,6 +1164,7 @@ empathy_preferences_show (GtkWindow *parent)
 		"checkbutton_show_smileys", &preferences->checkbutton_show_smileys,
 		"checkbutton_show_contacts_in_rooms", &preferences->checkbutton_show_contacts_in_rooms,
 		"iconview_chat_theme", &preferences->iconview_chat_theme,
+		"button_theme_edit", &preferences->button_theme_edit,
 		"checkbutton_separate_chat_windows", &preferences->checkbutton_separate_chat_windows,
 		"checkbutton_autoconnect", &preferences->checkbutton_autoconnect,
 		"checkbutton_notifications_enabled", &preferences->checkbutton_notifications_enabled,
