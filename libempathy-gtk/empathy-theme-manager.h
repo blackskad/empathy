@@ -26,14 +26,15 @@
 #define __EMPATHY_THEME_MANAGER_H__
 
 #include <glib-object.h>
+#include "empathy-chat-theme.h"
 #include "empathy-chat-view.h"
 
 G_BEGIN_DECLS
 
 typedef enum {
-  //EMPATHY_THEME_MANAGER_PATH,
+  /* EMPATHY_THEME_MANAGER_PATH, */
   EMPATHY_THEME_MANAGER_NAME,
-  //EMPATHY_THEME_MANAGER_DISPLAY_NAME,
+  /* EMPATHY_THEME_MANAGER_DISPLAY_NAME, */
   EMPATHY_THEME_MANAGER_THUMBNAIL,
   EMPATHY_THEME_MANAGER_THEME,
   EMPATHY_THEME_MANAGER_COUNT
@@ -60,6 +61,8 @@ struct _EmpathyThemeManagerClass {
 
 GType                   empathy_theme_manager_get_type    (void) G_GNUC_CONST;
 EmpathyThemeManager *   empathy_theme_manager_get         (void);
+void                    empathy_theme_manager_select      (EmpathyThemeManager *self,
+                                                           EmpathyChatTheme *theme);
 EmpathyChatView *       empathy_theme_manager_create_view (EmpathyThemeManager *manager);
 
 G_END_DECLS

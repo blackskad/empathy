@@ -78,6 +78,26 @@ empathy_theme_manager_get (void)
   return manager;
 }
 
+void
+empathy_theme_manager_select (EmpathyThemeManager *self,
+    EmpathyChatTheme *theme)
+{
+  EmpathyThemeManagerPriv *priv = GET_PRIV (self);
+
+  g_assert (EMPATHY_IS_CHAT_THEME (theme));
+
+  if (priv->selected)
+  {
+    g_object_unref (G_OBJECT (priv->selected));
+  }
+
+  g_object_ref (G_OBJECT (theme));
+  priv->selected = theme;
+
+  /* FIXME: update GConf data */
+  /* FIXME: send theme-changed signal */
+}
+
 EmpathyChatView *
 empathy_theme_manager_create_view (EmpathyThemeManager *self)
 {
@@ -87,14 +107,17 @@ empathy_theme_manager_create_view (EmpathyThemeManager *self)
 
   if (!priv->selected)
     {
+      EmpathyChatTheme *theme;
       GtkTreeIter iter;
+
       if (!gtk_tree_model_get_iter_first (GTK_TREE_MODEL (self), &iter))
         {
           return NULL;
         }
       gtk_tree_model_get (GTK_TREE_MODEL (self), &iter,
-          EMPATHY_THEME_MANAGER_THEME, &(priv->selected), -1);
-      /* FIXME: save in gconf too? */
+          EMPATHY_THEME_MANAGER_THEME, &theme, -1);
+      empathy_theme_manager_select (self, theme);
+      g_object_unref (theme);
     }
 
   return empathy_chat_theme_create_view (priv->selected);

@@ -975,6 +975,7 @@ preferences_theme_notify_cb (EmpathyConf *conf,
 	g_free (conf_name);
 	g_free (conf_path);
 }
+#endif
 
 static void
 preferences_theme_changed_cb (GtkIconView        *iconview,
@@ -988,33 +989,21 @@ preferences_theme_changed_cb (GtkIconView        *iconview,
 		GtkTreeIter iter;
 
 		if (gtk_tree_model_get_iter (model, &iter, treepath)) {
-			gboolean is_adium;
-			gchar *name;
-			gchar *path;
+			EmpathyChatTheme *theme;
 
 			gtk_tree_model_get (model, &iter,
-					    COL_COMBO_IS_ADIUM, &is_adium,
-					    COL_COMBO_NAME, &name,
-					    COL_COMBO_PATH, &path,
+					    EMPATHY_THEME_MANAGER_THEME, &theme,
 					    -1);
 
-			empathy_conf_set_string (empathy_conf_get (),
-						 EMPATHY_PREFS_CHAT_THEME,
-						 name);
-			if (is_adium == TRUE) {
-				empathy_conf_set_string (empathy_conf_get (),
-							 EMPATHY_PREFS_CHAT_ADIUM_PATH,
-							 path);
-			}
-
-			g_free (name);
-			g_free (path);
+			empathy_theme_manager_select (
+				empathy_theme_manager_get (),
+				theme);
+			g_object_unref (theme);
 		}
 		g_list_foreach (selection, (GFunc) gtk_tree_path_free, NULL);
 		g_list_free (selection);
 	}
 }
-#endif
 
 static void
 preferences_themes_install_cb (GtkButton *button,
@@ -1212,7 +1201,7 @@ empathy_preferences_show (GtkWindow *parent)
 	empathy_builder_connect (gui, preferences,
 			      "preferences_dialog", "destroy", preferences_destroy_cb,
 			      "preferences_dialog", "response", preferences_response_cb,
-	//		      "iconview_chat_theme", "selection-changed", preferences_theme_changed_cb,
+			      "iconview_chat_theme", "selection-changed", preferences_theme_changed_cb,
 	                      "button_theme_install", "clicked", preferences_themes_install_cb,
 			      NULL);
 
