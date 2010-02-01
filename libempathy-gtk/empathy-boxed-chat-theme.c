@@ -18,21 +18,12 @@
  * Boston, MA  02110-1301  USA
  */
 
-/*
- * FIXME: add a variant based on theme colors
- */
-
 #include "empathy-boxed-chat-theme.h"
 
 #include "empathy-chat-view.h"
 #include "empathy-theme-boxes.h"
 
 G_DEFINE_TYPE (EmpathyBoxedChatTheme, empathy_boxed_chat_theme, EMPATHY_TYPE_CHAT_THEME);
-
-#if 0
-EmpathyThemeBoxesColors simple_colors = {
-}
-#endif
 
 EmpathyThemeBoxesColors clean_colors = {
     "black",    /* header_foreground */
@@ -61,7 +52,7 @@ EmpathyThemeBoxesColors blue_colors = {
 };
 
 static EmpathyChatTheme *
-empathy_boxed_chat_theme_new (gchar *name)
+empathy_boxed_chat_theme_new ()
 {
   EmpathyChatTheme *theme;
   GList *variants = NULL;
@@ -72,7 +63,7 @@ empathy_boxed_chat_theme_new (gchar *name)
   variants = g_list_append (variants, "blue");
 
   theme = EMPATHY_CHAT_THEME (g_object_new (EMPATHY_TYPE_BOXED_CHAT_THEME,
-      "theme-name", name,
+      "theme-name", "boxes",
       "theme-variants" , variants,
       NULL));
 
@@ -87,14 +78,7 @@ empathy_boxed_chat_theme_discover ()
   EmpathyChatTheme *theme;
   GList *themes = NULL;
 
-  /* FIXME: use theme variants instead of new theme instances */
-  theme = empathy_boxed_chat_theme_new ("clean");
-  themes = g_list_append (themes, theme);
-
-  theme = empathy_boxed_chat_theme_new ("blue");
-  themes = g_list_append (themes, theme);
-
-  theme = empathy_boxed_chat_theme_new ("simple");
+  theme = empathy_boxed_chat_theme_new ();
   themes = g_list_append (themes, theme);
 
   return themes;
@@ -104,27 +88,28 @@ static EmpathyChatView *
 empathy_boxed_chat_theme_create_view (EmpathyChatTheme *theme)
 {
   EmpathyThemeBoxes *view;
-  gchar *name;
+  gchar *variant;
 
   g_return_val_if_fail (EMPATHY_IS_BOXED_CHAT_THEME (theme), NULL);
 
   view = empathy_theme_boxes_new ();
 
-  /* FIXME: Apply the correct colors for the selected variant */
-  name = empathy_chat_theme_get_name (theme);  
-  if (g_strcmp0 (name, "clean") == 0)
+  variant = empathy_chat_theme_get_selected_variant (theme);  
+  if (g_strcmp0 (variant, "clean") == 0)
     {
+      empathy_theme_boxes_use_system_colors (view, FALSE);
       empathy_theme_boxes_set_colors (view, &clean_colors);
     }
-  else if (g_strcmp0 (name, "blue") == 0)
+  else if (g_strcmp0 (variant, "blue") == 0)
     {
+      empathy_theme_boxes_use_system_colors (view, FALSE);
       empathy_theme_boxes_set_colors (view, &blue_colors);
     }
   else
     {
       empathy_theme_boxes_use_system_colors (view, TRUE);
     }
-
+  g_free (variant);
   return EMPATHY_CHAT_VIEW (view);
 }
 

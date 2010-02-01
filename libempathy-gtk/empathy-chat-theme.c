@@ -34,6 +34,7 @@ typedef struct _EmpathyChatThemePriv EmpathyChatThemePriv;
 struct _EmpathyChatThemePriv
 {
   gchar *name;
+  gchar *variant;
   GList *variants;
   GdkPixbuf *thumbnail;
 };
@@ -42,7 +43,8 @@ typedef enum {
   PROP_0,
   PROP_THEME_NAME,
   PROP_THEME_THUMBNAIL,
-  PROP_THEME_VARIANTS
+  PROP_THEME_VARIANTS,
+  PROP_THEME_VARIANT
 } EmpathyChatThemeProperty;
 
 EmpathyChatView *
@@ -119,6 +121,25 @@ empathy_chat_theme_get_variants (EmpathyChatTheme *theme)
 {
   EmpathyChatThemePriv *priv = GET_PRIV (theme);
   return priv->variants;
+}
+
+void
+empathy_chat_theme_set_selected_variant (EmpathyChatTheme *theme,
+    gchar *variant)
+{
+  EmpathyChatThemePriv *priv = GET_PRIV (theme);
+  if (priv->variant)
+    {
+      g_free (priv->variant);
+    }
+  priv->variant = g_strdup (variant);
+}
+
+gchar *
+empathy_chat_theme_get_selected_variant (EmpathyChatTheme *theme)
+{
+  EmpathyChatThemePriv *priv = GET_PRIV (theme);
+  return g_strdup (priv->variant);
 }
 
 static void

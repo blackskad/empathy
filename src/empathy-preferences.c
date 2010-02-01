@@ -1038,7 +1038,7 @@ preferences_themes_show_select_variants_dialog (EmpathyPreferences *preferences,
 	box = gtk_hbox_new (FALSE, 6);
 
 	label = gtk_label_new ("Theme variant");
-	combobox = gtk_combo_box_new ();
+	combobox = gtk_combo_box_new_text ();
 
 	variants = empathy_chat_theme_get_variants (theme);
 	for (; variants; variants = variants->next) {
@@ -1047,13 +1047,13 @@ preferences_themes_show_select_variants_dialog (EmpathyPreferences *preferences,
 
 	gtk_container_add (GTK_CONTAINER (box), label);
 	gtk_container_add (GTK_CONTAINER (box), combobox);
+	gtk_widget_show_all (box);
 
 	gtk_container_add (GTK_CONTAINER (content), box);
 
 	if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_CLOSE) {
 		gchar *variant = gtk_combo_box_get_active_text (GTK_COMBO_BOX (combobox));
-		g_message ("selected variant: %s", variant);
-		//empathy_chat_theme_set_variant (theme, variant);
+		empathy_chat_theme_set_selected_variant (theme, variant);
 		g_free (variant);
 	}
 	
