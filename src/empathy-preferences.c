@@ -1017,13 +1017,55 @@ preferences_theme_changed_cb (GtkIconView        *iconview,
 }
 
 static void
+preferences_themes_show_select_variants_dialog (EmpathyPreferences *preferences,
+						EmpathyChatTheme *theme)
+{
+	GList *variants;
+	GtkWidget *dialog;
+	GtkWidget *content;
+	GtkWidget *box;
+	GtkWidget *label;
+	GtkWidget *combobox;
+
+	dialog = gtk_dialog_new_with_buttons ("Select theme variant",
+	                             GTK_WINDOW (preferences->dialog),
+	                             GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+	                             GTK_STOCK_CLOSE,
+	                             GTK_RESPONSE_CLOSE,
+	                             NULL);
+
+	content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
+	box = gtk_hbox_new (FALSE, 6);
+
+	label = gtk_label_new ("Theme variant");
+	combobox = gtk_combo_box_new ();
+
+	variants = empathy_chat_theme_get_variants (theme);
+	for (; variants; variants = variants->next) {
+		gtk_combo_box_append_text (GTK_COMBO_BOX (combobox), variants->data);
+	}
+
+	gtk_container_add (GTK_CONTAINER (box), label);
+	gtk_container_add (GTK_CONTAINER (box), combobox);
+
+	gtk_container_add (GTK_CONTAINER (content), box);
+
+	if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_CLOSE) {
+		gchar *variant = gtk_combo_box_get_active_text (GTK_COMBO_BOX (combobox));
+		g_message ("selected variant: %s", variant);
+		//empathy_chat_theme_set_variant (theme, variant);
+		g_free (variant);
+	}
+	
+	gtk_widget_destroy (dialog);
+}
+
+static void
 preferences_themes_edit_cb (GtkButton *button,
                             gpointer user_data)
 {
-	int response;
 	GtkIconView *iconview;
 	GList *selection;
-	//GList *variants;
 	EmpathyPreferences *preferences = user_data;
 	EmpathyChatTheme *theme = NULL;
 
@@ -1042,23 +1084,12 @@ preferences_themes_edit_cb (GtkButton *button,
 			gtk_tree_model_get (model, &iter,
 					    EMPATHY_THEME_MANAGER_THEME, &theme,
 					    -1);
+			preferences_themes_show_select_variants_dialog (preferences, theme);
+			g_object_unref (theme);	
 		}
 		g_list_foreach (selection, (GFunc) gtk_tree_path_free, NULL);
 		g_list_free (selection);
 	}
-
-	if (theme == NULL) {
-		return;
-	}
-
-	/*variants = empathy_chat_theme_get_variants (theme);*/
-
-	// update variant combolist and show dialog
-	response = gtk_dialog_run (GTK_DIALOG (preferences->customize_theme));
-
-	// get variant from dialog and save
-
-	g_object_unref (theme);	
 }
 
 static void
