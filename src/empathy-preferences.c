@@ -20,6 +20,7 @@
  * Authors: Mikael Hallendal <micke@imendio.com>
  *          Richard Hult <richard@imendio.com>
  *          Martyn Russell <martyn@imendio.com>
+ *          Thomas Meire <blackskad@gmail.com>
  */
 
 #include <config.h>
@@ -59,6 +60,8 @@ typedef struct {
 
 	GtkWidget *iconview_chat_theme;
 	GtkWidget *button_theme_edit;
+	GtkWidget *combobox_theme_variants;
+	GtkWidget *customize_theme;
 
 	GtkWidget *checkbutton_sounds_enabled;
 	GtkWidget *checkbutton_sounds_disabled_away;
@@ -1014,6 +1017,51 @@ preferences_theme_changed_cb (GtkIconView        *iconview,
 }
 
 static void
+preferences_themes_edit_cb (GtkButton *button,
+                            gpointer user_data)
+{
+	int response;
+	GtkIconView *iconview;
+	GList *selection;
+	//GList *variants;
+	EmpathyPreferences *preferences = user_data;
+	EmpathyChatTheme *theme = NULL;
+
+	iconview = GTK_ICON_VIEW (preferences->iconview_chat_theme);
+
+	// get selected theme from iconview
+	selection = gtk_icon_view_get_selected_items (iconview);
+	
+	if (selection) {
+		GtkTreePath *treepath = selection->data;
+		GtkTreeModel *model = gtk_icon_view_get_model (iconview);
+		GtkTreeIter iter;
+
+		if (gtk_tree_model_get_iter (model, &iter, treepath)) {
+
+			gtk_tree_model_get (model, &iter,
+					    EMPATHY_THEME_MANAGER_THEME, &theme,
+					    -1);
+		}
+		g_list_foreach (selection, (GFunc) gtk_tree_path_free, NULL);
+		g_list_free (selection);
+	}
+
+	if (theme == NULL) {
+		return;
+	}
+
+	/*variants = empathy_chat_theme_get_variants (theme);*/
+
+	// update variant combolist and show dialog
+	response = gtk_dialog_run (GTK_DIALOG (preferences->customize_theme));
+
+	// get variant from dialog and save
+
+	g_object_unref (theme);	
+}
+
+static void
 preferences_themes_install_cb (GtkButton *button,
                                gpointer user_data)
 {
@@ -1090,6 +1138,7 @@ preferences_themes_setup (EmpathyPreferences *preferences)
 #endif
 	gtk_icon_view_set_text_column (iconview, EMPATHY_THEME_MANAGER_NAME);
 	gtk_icon_view_set_pixbuf_column (iconview, EMPATHY_THEME_MANAGER_THUMBNAIL);
+	gtk_icon_view_set_selection_mode (iconview, GTK_SELECTION_BROWSE);
 
 	gtk_icon_view_set_model (iconview,
 		GTK_TREE_MODEL (empathy_theme_manager_get ()));
@@ -1165,6 +1214,7 @@ empathy_preferences_show (GtkWindow *parent)
 		"checkbutton_show_contacts_in_rooms", &preferences->checkbutton_show_contacts_in_rooms,
 		"iconview_chat_theme", &preferences->iconview_chat_theme,
 		"button_theme_edit", &preferences->button_theme_edit,
+		"combobox_theme_variants", &preferences->combobox_theme_variants,
 		"checkbutton_separate_chat_windows", &preferences->checkbutton_separate_chat_windows,
 		"checkbutton_autoconnect", &preferences->checkbutton_autoconnect,
 		"checkbutton_notifications_enabled", &preferences->checkbutton_notifications_enabled,
@@ -1181,6 +1231,7 @@ empathy_preferences_show (GtkWindow *parent)
 		"checkbutton_location_resource_network", &preferences->checkbutton_location_resource_network,
 		"checkbutton_location_resource_cell", &preferences->checkbutton_location_resource_cell,
 		"checkbutton_location_resource_gps", &preferences->checkbutton_location_resource_gps,
+		"dialog_theme_customize", &preferences->customize_theme,
 		NULL);
 	g_free (filename);
 
@@ -1188,6 +1239,7 @@ empathy_preferences_show (GtkWindow *parent)
 			      "preferences_dialog", "destroy", preferences_destroy_cb,
 			      "preferences_dialog", "response", preferences_response_cb,
 			      "iconview_chat_theme", "selection-changed", preferences_theme_changed_cb,
+	                      "button_theme_edit", "clicked", preferences_themes_edit_cb,
 	                      "button_theme_install", "clicked", preferences_themes_install_cb,
 			      NULL);
 

@@ -163,7 +163,7 @@ empathy_chat_theme_set_property (GObject *object,
       case PROP_THEME_VARIANTS:
         g_assert (priv->variants == NULL);
         /* make a deep copy of the list */
-        variants = g_value_get_object (value);
+        variants = g_value_get_pointer (value);
         for (; variants; variants = variants->next)
         {
           priv->variants = g_list_append (priv->variants, g_strdup (variants->data));
@@ -204,7 +204,7 @@ empathy_chat_theme_class_init (EmpathyChatThemeClass *class)
           GDK_TYPE_PIXBUF,
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-	g_object_class_install_property (object_class, PROP_THEME_THUMBNAIL,
+	g_object_class_install_property (object_class, PROP_THEME_VARIANTS,
       g_param_spec_pointer ("theme-variants",
           "The theme variants",
           "A list of strings with the names of the theme variants",
