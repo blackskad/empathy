@@ -24,31 +24,20 @@
 
 #include "config.h"
 
-#include <string.h>
-
-#include <glib/gi18n-lib.h>
-#include <telepathy-glib/dbus.h>
 #include <gtk/gtk.h>
 
-#include <telepathy-glib/util.h>
 #include <libempathy/empathy-utils.h>
 
 #include "empathy-theme-manager.h"
+
 #include "empathy-chat-view.h"
-#include "empathy-conf.h"
 #include "empathy-chat-theme.h"
-#include "empathy-chat-text-view.h"
 #include "empathy-classic-chat-theme.h"
 #include "empathy-boxed-chat-theme.h"
-#include "empathy-theme-boxes.h"
-#include "empathy-theme-irc.h"
 
 #ifdef HAVE_WEBKIT
-#include "empathy-theme-adium.h"
+#include "empathy-adium-chat-theme.h"
 #endif
-
-#define DEBUG_FLAG EMPATHY_DEBUG_OTHER
-#include <libempathy/empathy-debug.h>
 
 #define GET_PRIV(obj) EMPATHY_GET_PRIV (obj, EmpathyThemeManager)
 
@@ -62,6 +51,17 @@ enum {
 };
 
 static guint signals[LAST_SIGNAL] = { 0 };
+
+typedef GList* (*EmpathyThemeProvider)(void);
+
+EmpathyThemeProvider providers[4] = {
+    empathy_classic_chat_theme_discover,
+    empathy_boxed_chat_theme_discover,
+#ifdef HAVE_WEBKIT
+    empathy_adium_chat_theme_discover,
+#endif
+    NULL
+};
 
 G_DEFINE_TYPE (EmpathyThemeManager, empathy_theme_manager, GTK_TYPE_LIST_STORE);
 
@@ -119,7 +119,6 @@ empathy_theme_manager_create_view (EmpathyThemeManager *self)
       empathy_theme_manager_select (self, theme);
       g_object_unref (theme);
     }
-
   return empathy_chat_theme_create_view (priv->selected);
 }
 
@@ -175,10 +174,10 @@ empathy_theme_manager_class_init (EmpathyThemeManagerClass *klass)
 static void
 empathy_theme_manager_init (EmpathyThemeManager *self)
 {
+  int j;
   GList *i;
   GList *themes;
-  EmpathyThemeManagerPriv *priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      EMPATHY_TYPE_THEME_MANAGER, EmpathyThemeManagerPriv);
+  EmpathyThemeManagerPriv *priv;
 
   /* setup the columns */
   GType types[] = {
@@ -187,22 +186,22 @@ empathy_theme_manager_init (EmpathyThemeManager *self)
     EMPATHY_TYPE_CHAT_THEME   /* The chat theme */
   };
 
-  self->priv = priv;
-
 	gtk_list_store_set_column_types (GTK_LIST_STORE (self),
 	    EMPATHY_THEME_MANAGER_COUNT, types);
 
-  /* discover all themes */
-  themes = empathy_classic_chat_theme_discover ();
-  for (i = themes; i; i=i->next)
-    {
-      empathy_theme_manager_add_theme (self, i->data);
-    }
+  /* add priv struct */
+  priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      EMPATHY_TYPE_THEME_MANAGER, EmpathyThemeManagerPriv);
+  self->priv = priv;
 
-  themes = empathy_boxed_chat_theme_discover ();
-  for (i = themes; i; i=i->next)
+  /* discover all themes */
+  for (j = 0; providers[j]; j++)
     {
-      empathy_theme_manager_add_theme (self, i->data);
+      themes = providers[j]();
+      for (i = themes; i; i=i->next)
+        {
+          empathy_theme_manager_add_theme (self, i->data);
+        }
     }
 }
 
@@ -210,66 +209,6 @@ empathy_theme_manager_init (EmpathyThemeManager *self)
 #if 0
 
 /* OLD STUFF, LET's MOVE IT! */
-
-#ifdef HAVE_WEBKIT
-static void
-find_themes (GList **list, const gchar *dirpath)
-{
-	GDir *dir;
-	GError *error = NULL;
-	const gchar *name = NULL;
-	GHashTable *info = NULL;
-
-	dir = g_dir_open (dirpath, 0, &error);
-	if (dir != NULL) {
-		name = g_dir_read_name (dir);
-		while (name != NULL) {
-			gchar *path;
-
-			path = g_build_path (G_DIR_SEPARATOR_S, dirpath, name, NULL);
-			if (empathy_adium_path_is_valid (path)) {
-				info = empathy_adium_info_new (path);
-				if (info != NULL) {
-					*list = g_list_prepend (*list, info);
-				}
-			}
-			g_free (path);
-			name = g_dir_read_name (dir);
-		}
-		g_dir_close (dir);
-	} else {
-		DEBUG ("Error opening %s: %s\n", dirpath, error->message);
-		g_error_free (error);
-	}
-}
-#endif /* HAVE_WEBKIT */
-
-GList *
-empathy_theme_manager_get_adium_themes (void)
-{
-#ifdef HAVE_WEBKIT
-	GList *themes_list = NULL;
-	gchar *userpath = NULL;
-	const gchar *const *paths = NULL;
-	gint i = 0;
-
-	userpath = g_build_path (G_DIR_SEPARATOR_S, g_get_user_data_dir (), "adium/message-styles", NULL);
-	find_themes (&themes_list, userpath);
-	g_free (userpath);
-
-	paths = g_get_system_data_dirs ();
-	for (i = 0; paths[i] != NULL; i++) {
-		userpath = g_build_path (G_DIR_SEPARATOR_S, paths[i],
-			"adium/message-styles", NULL);
-		find_themes (&themes_list, userpath);
-		g_free (userpath);
-	}
-
-	return themes_list;
-#else
-	return NULL;
-#endif /* HAVE_WEBKIT */
-}
 
 static void
 empathy_theme_manager_theme_file_loaded (GObject *source_object,

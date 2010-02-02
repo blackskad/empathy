@@ -32,6 +32,7 @@ libempathy_gtk_handwritten_source =            	\
 	empathy-account-widget-private.h	\
 	empathy-account-widget-sip.c		\
 	empathy-account-widget.c		\
+	empathy-adium-chat-theme.c		\
 	empathy-audio-sink.c			\
 	empathy-audio-src.c			\
 	empathy-avatar-chooser.c		\
@@ -81,6 +82,7 @@ libempathy_gtk_headers =			\
 	empathy-account-widget-irc.h		\
 	empathy-account-widget-sip.h		\
 	empathy-account-widget.h		\
+	empathy-adium-chat-theme.h		\
 	empathy-audio-sink.h			\
 	empathy-audio-src.h			\
 	empathy-avatar-chooser.h		\

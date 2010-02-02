@@ -60,8 +60,6 @@ typedef struct {
 
 	GtkWidget *iconview_chat_theme;
 	GtkWidget *button_theme_edit;
-	GtkWidget *combobox_theme_variants;
-	GtkWidget *customize_theme;
 
 	GtkWidget *checkbutton_sounds_enabled;
 	GtkWidget *checkbutton_sounds_disabled_away;
@@ -1245,7 +1243,6 @@ empathy_preferences_show (GtkWindow *parent)
 		"checkbutton_show_contacts_in_rooms", &preferences->checkbutton_show_contacts_in_rooms,
 		"iconview_chat_theme", &preferences->iconview_chat_theme,
 		"button_theme_edit", &preferences->button_theme_edit,
-		"combobox_theme_variants", &preferences->combobox_theme_variants,
 		"checkbutton_separate_chat_windows", &preferences->checkbutton_separate_chat_windows,
 		"checkbutton_autoconnect", &preferences->checkbutton_autoconnect,
 		"checkbutton_notifications_enabled", &preferences->checkbutton_notifications_enabled,
@@ -1262,7 +1259,6 @@ empathy_preferences_show (GtkWindow *parent)
 		"checkbutton_location_resource_network", &preferences->checkbutton_location_resource_network,
 		"checkbutton_location_resource_cell", &preferences->checkbutton_location_resource_cell,
 		"checkbutton_location_resource_gps", &preferences->checkbutton_location_resource_gps,
-		"dialog_theme_customize", &preferences->customize_theme,
 		NULL);
 	g_free (filename);
 
