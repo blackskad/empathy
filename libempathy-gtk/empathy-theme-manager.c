@@ -25,7 +25,7 @@
 #include "config.h"
 
 #include <gtk/gtk.h>
-
+#include <telepathy-glib/util.h>
 #include <libempathy/empathy-utils.h>
 
 #include "empathy-theme-manager.h"

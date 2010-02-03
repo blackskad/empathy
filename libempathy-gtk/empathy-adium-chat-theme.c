@@ -56,7 +56,7 @@ empathy_adium_chat_theme_new (GHashTable *info)
   return theme;
 }
 
-static void
+static GList*
 empathy_adium_chat_theme_discover_in_dir (gchar *dirpath,
     GList *themes)
 {
@@ -92,6 +92,7 @@ empathy_adium_chat_theme_discover_in_dir (gchar *dirpath,
       DEBUG ("Error opening %s: %s\n", dirpath, error->message);
       g_error_free (error);
     }
+  return themes;
 }
 
 GList *
@@ -103,16 +104,16 @@ empathy_adium_chat_theme_discover ()
 	gint i = 0;
 
 	path = g_build_path (G_DIR_SEPARATOR_S, g_get_user_data_dir (), "adium/message-styles", NULL);
-  empathy_adium_chat_theme_discover_in_dir (path, themes);
+  themes = empathy_adium_chat_theme_discover_in_dir (path, themes);
   g_free (path);
 
+  paths = g_get_system_data_dirs ();
   for (i = 0; paths[i]; i++)
     {
 	    path = g_build_path (G_DIR_SEPARATOR_S, paths[i], "adium/message-styles", NULL);
-      empathy_adium_chat_theme_discover_in_dir (path, themes);
+      themes = empathy_adium_chat_theme_discover_in_dir (path, themes);
       g_free (path);
     }
-
   return themes;
 }
 
@@ -126,17 +127,15 @@ empathy_adium_chat_theme_create_view (EmpathyChatTheme *theme)
 
   priv = GET_PRIV (theme);
   
+  if (!priv->data)
+    {
+      priv->data = empathy_adium_data_new_with_info (
+          tp_asv_get_string (priv->info, "path"),
+          priv->info);
+    }
+
   view = empathy_theme_adium_new (priv->data);
   return EMPATHY_CHAT_VIEW (view);
-}
-
-static void
-empathy_adium_chat_theme_constructed (GObject *object)
-{
-  EmpathyAdiumChatThemePriv *priv = GET_PRIV (object);
-  priv->data = empathy_adium_data_new_with_info (
-      tp_asv_get_string (priv->info, "path"),
-      priv->info);
 }
 
 static void
@@ -152,7 +151,8 @@ empathy_adium_chat_theme_class_init (EmpathyAdiumChatThemeClass *theme_class)
   GObjectClass *object_class = G_OBJECT_CLASS (theme_class);
   EmpathyChatThemeClass *chat_theme_class = EMPATHY_CHAT_THEME_CLASS (theme_class);
 
-  object_class->constructed = empathy_adium_chat_theme_constructed;
   chat_theme_class->create_view = empathy_adium_chat_theme_create_view;
+
+  g_type_class_add_private (object_class, sizeof (EmpathyAdiumChatThemePriv));
 }
 
