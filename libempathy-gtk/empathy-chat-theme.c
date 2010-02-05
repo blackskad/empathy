@@ -66,10 +66,10 @@ empathy_chat_theme_get_name (EmpathyChatTheme *theme)
   return g_strdup (priv->name);
 }
 
-#if 0
 static void
 empathy_chat_theme_create_thumbnail (EmpathyChatTheme *theme)
 {
+  GtkWindow *window;
   GdkPixmap *full;
   EmpathyChatView *view;
   GdkRectangle rect = {0, 0, 100, 100};
@@ -82,6 +82,9 @@ empathy_chat_theme_create_thumbnail (EmpathyChatTheme *theme)
   /* get a snapshot and create the preview, the easy way...
    * FIXME: develop an algorithm to discover the interesting parts of an image
    * */
+  window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+  gtk_container_add (window, view);
+  gtk_widget_show_all (window);
   full = gtk_widget_get_snapshot (GTK_WIDGET(view), &rect);
   priv->thumbnail = gdk_pixbuf_get_from_drawable (NULL, full, NULL,
       0, 0, 0, 0, 100, 100);
@@ -101,7 +104,6 @@ empathy_chat_theme_load_thumbnail (EmpathyChatTheme *theme)
       empathy_chat_theme_create_thumbnail (theme);
     }
 }
-#endif
 
 GdkPixbuf *
 empathy_chat_theme_get_thumbnail (EmpathyChatTheme *theme)
