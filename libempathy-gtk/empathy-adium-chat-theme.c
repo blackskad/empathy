@@ -27,6 +27,9 @@
 #include "empathy-chat-view.h"
 #include "empathy-theme-adium.h"
 
+/* the directory for themes (located within user_data_dir) */
+#define THEME_DIRECTORY "adium/message-styles"
+
 #define GET_PRIV(obj) EMPATHY_GET_PRIV (obj, EmpathyAdiumChatTheme)
 
 G_DEFINE_TYPE (EmpathyAdiumChatTheme, empathy_adium_chat_theme, EMPATHY_TYPE_CHAT_THEME);
@@ -103,18 +106,75 @@ empathy_adium_chat_theme_discover ()
 	const gchar *const *paths = NULL;
 	gint i = 0;
 
-	path = g_build_path (G_DIR_SEPARATOR_S, g_get_user_data_dir (), "adium/message-styles", NULL);
+	path = g_build_path (G_DIR_SEPARATOR_S, g_get_user_data_dir (), THEME_DIRECTORY, NULL);
   themes = empathy_adium_chat_theme_discover_in_dir (path, themes);
   g_free (path);
 
   paths = g_get_system_data_dirs ();
   for (i = 0; paths[i]; i++)
     {
-	    path = g_build_path (G_DIR_SEPARATOR_S, paths[i], "adium/message-styles", NULL);
+	    path = g_build_path (G_DIR_SEPARATOR_S, paths[i], THEME_DIRECTORY, NULL);
       themes = empathy_adium_chat_theme_discover_in_dir (path, themes);
       g_free (path);
     }
   return themes;
+}
+
+static void
+empathy_theme_manager_theme_file_loaded (GObject *source_object,
+    GAsyncResult *result,
+    gpointer user_data)
+{
+  GError *error = NULL;
+  gchar *contents;
+  gsize length;
+
+  GFile *file = G_FILE (source_object);
+  gchar *filename = g_file_get_uri (file);
+
+  if (!g_file_load_contents_finish (file, result, &contents, &length, NULL, &error))
+    {
+      /* FIXME: show a nice error dialog */
+      g_warning ("Failed to load '%s': %s", filename, error->message);
+      g_error_free (error);
+      return;
+    }
+  else
+    {
+      g_message ("Loaded the contents of %s", filename);
+
+      /* extract the content to THEME_DIRECTORY */
+      /* */
+    }
+  g_free (filename);
+}
+
+void
+empathy_adium_chat_theme_install (gchar *path) {
+  GFile *file;
+  gchar *filename;
+
+  g_return_if_fail (!EMP_STR_EMPTY (path));
+  g_return_if_fail (g_strcmp0(path, "adiumxtra://") != 0);
+
+  /* Assume we can use http to fetch the theme when the path is prefixed with
+   * adiumxtra://
+   * */
+  if (g_str_has_prefix (path, "adiumxtra://"))
+    {
+      filename = g_strdup_printf ("http://%s", path + strlen ("adiumxtra://"));
+    }
+  else
+    {
+      filename = g_strdup (path);
+    }
+
+  /* Read the archive file & load it async */
+  file = g_file_new_for_commandline_arg (filename);
+  g_file_load_contents_async (file, NULL,
+      empathy_adium_chat_theme_file_loaded, NULL);
+
+  g_free (filename);
 }
 
 static EmpathyChatView *

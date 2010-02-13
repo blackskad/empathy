@@ -1106,7 +1106,7 @@ preferences_themes_install_cb (GtkButton *button,
 
 	if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT) {
 		char *filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
-		//empathy_theme_manager_install_theme (filename);
+		empathy_theme_manager_install (filename);
 		g_free (filename);
 	}
 

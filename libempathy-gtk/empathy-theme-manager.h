@@ -61,6 +61,7 @@ struct _EmpathyThemeManagerClass {
 
 GType                   empathy_theme_manager_get_type    (void) G_GNUC_CONST;
 EmpathyThemeManager *   empathy_theme_manager_get         (void);
+void                    empathy_theme_manager_install     (gchar *path);
 void                    empathy_theme_manager_select      (EmpathyThemeManager *self,
                                                            EmpathyChatTheme *theme);
 EmpathyChatView *       empathy_theme_manager_create_view (EmpathyThemeManager *manager);

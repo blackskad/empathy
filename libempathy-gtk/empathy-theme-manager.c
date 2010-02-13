@@ -79,6 +79,14 @@ empathy_theme_manager_get (void)
 }
 
 void
+empathy_theme_manager_install (gchar *path)
+{
+  /* only adium themes are installable atm, so that's easy. */ 
+  g_message ("Installing theme from %s", path);
+  empathy_adium_chat_theme_install (path);
+}
+
+void
 empathy_theme_manager_select (EmpathyThemeManager *self,
     EmpathyChatTheme *theme)
 {
@@ -205,65 +213,3 @@ empathy_theme_manager_init (EmpathyThemeManager *self)
     }
 }
 
-
-#if 0
-
-/* OLD STUFF, LET's MOVE IT! */
-
-static void
-empathy_theme_manager_theme_file_loaded (GObject *source_object,
-    GAsyncResult *result,
-    gpointer user_data)
-{
-  GError *error = NULL;
-  gchar *contents;
-  gsize length;
-
-  GFile *file = G_FILE (source_object);
-  gchar *filename = g_file_get_uri (file);
-
-  if (!g_file_load_contents_finish (file, result, &contents, &length, NULL, &error))
-    {
-      /* FIXME: show a nice error dialog */
-      g_warning ("Failed to load '%s': %s", filename, error->message);
-      g_error_free (error);
-      return;
-    }
-  else
-    {
-      g_message ("Loaded the contents of %s", filename);
-    }
-  g_free (filename);
-}
-
-gboolean
-empathy_theme_manager_install_theme (gchar *path)
-{
-  GFile *file;
-  gchar *filename;
-
-  g_return_val_if_fail (!EMP_STR_EMPTY (path), FALSE);
-  g_return_val_if_fail (g_strcmp0(path, "adiumxtra://") != 0, FALSE);
-
-  /* Assume we can use http to fetch the theme when the path is prefixed with
-   * adiumxtra://
-   * */
-  if (g_str_has_prefix (path, "adiumxtra://"))
-    {
-      filename = g_strdup_printf ("http://%s", path + strlen ("adiumxtra://"));
-    }
-  else
-    {
-      filename = g_strdup (path);
-    }
-
-  /* Read the archive file & load it async */
-  file = g_file_new_for_commandline_arg (filename);
-  g_free (filename);
-
-  g_file_load_contents_async (file, NULL,
-      empathy_theme_manager_theme_file_loaded, NULL);
-
-  return TRUE;
-}
-#endif

@@ -69,7 +69,7 @@ empathy_chat_theme_get_name (EmpathyChatTheme *theme)
 static void
 empathy_chat_theme_create_thumbnail (EmpathyChatTheme *theme)
 {
-  GtkWindow *window;
+  GtkWidget *window;
   GdkPixmap *full;
   EmpathyChatView *view;
   GdkRectangle rect = {0, 0, 100, 100};
@@ -81,12 +81,13 @@ empathy_chat_theme_create_thumbnail (EmpathyChatTheme *theme)
 
   /* get a snapshot and create the preview, the easy way...
    * FIXME: develop an algorithm to discover the interesting parts of an image
+   * FIXME: needs GtkOffscreenWindow to work without hacks
    * */
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  gtk_container_add (window, view);
-  gtk_widget_show_all (window);
-  full = gtk_widget_get_snapshot (GTK_WIDGET(view), &rect);
-  priv->thumbnail = gdk_pixbuf_get_from_drawable (NULL, full, NULL,
+  gtk_container_add (GTK_CONTAINER (window), GTK_WIDGET (view));
+  gtk_widget_show_all (GTK_WIDGET (window));
+  full = gtk_widget_get_snapshot (GTK_WIDGET(window), &rect);
+  priv->thumbnail = gdk_pixbuf_get_from_drawable (NULL, full, gdk_colormap_get_system(),
       0, 0, 0, 0, 100, 100);
 
   /* save the preview to the cache */
@@ -112,8 +113,8 @@ empathy_chat_theme_get_thumbnail (EmpathyChatTheme *theme)
   if (!priv->thumbnail)
     {
       /* Taking off screen snapshots seems to be something for the future.
-       * So don't do anything if the thumbnail wasn't set on construction.
-      empathy_chat_theme_load_thumbnail (theme); */
+       * So don't do anything if the thumbnail wasn't set on construction.*/
+      empathy_chat_theme_load_thumbnail (theme);
     }
   return gdk_pixbuf_copy (priv->thumbnail);
 }
