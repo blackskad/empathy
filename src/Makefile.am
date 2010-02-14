@@ -27,7 +27,8 @@ LDADD =								\
 	$(LIBNOTIFY_LIBS)					\
 	$(EMPATHY_LIBS)						\
 	$(LIBCHAMPLAIN_LIBS)					\
-	$(WEBKIT_LIBS)
+	$(WEBKIT_LIBS)						\
+	-larchive
 
 noinst_LTLIBRARIES = libempathy-accounts-common.la
 

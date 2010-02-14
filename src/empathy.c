@@ -607,10 +607,12 @@ main (int argc, char *argv[])
         0, G_OPTION_ARG_NONE, &start_hidden,
         N_("Don't display the contact list or any other dialogs on startup"),
         NULL },
+#ifdef HAVE_WEBKIT
       { "install-theme", 'i',
-        0, G_OPTION_ARG_STRING, theme_archive_file,
+        0, G_OPTION_ARG_STRING, &theme_archive_file,
         N_("Theme to install, starting with adiumxtra://"),
         NULL },
+#endif
       { "version", 'v',
         G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, show_version_cb,
         NULL, NULL },
@@ -651,12 +653,15 @@ main (int argc, char *argv[])
   g_log_set_default_handler (tp_debug_sender_log_handler, G_LOG_DOMAIN);
 #endif
 
+#ifdef HAVE_WEBKIT
   /* Install the theme and quit */
   if (theme_archive_file)
     {
-      //empathy_theme_manager_install_theme (theme_archive_file);
+      /* FIXME: needs a main loop or sync version */
+      empathy_theme_manager_install (theme_archive_file);
       return 0;
     }
+#endif
 
   unique_app = unique_app_new ("org.gnome."PACKAGE_NAME, NULL);
 

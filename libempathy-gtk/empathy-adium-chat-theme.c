@@ -1,5 +1,7 @@
 /* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
+ * Copyright (C) 2005-2007 Imendio AB
+ * Copyright (C) 2008 Collabora Ltd.
  * Copyright (C) 2010 Thomas Meire <blackskad@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
@@ -16,10 +18,16 @@
  * License along with this program; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301  USA
+ *
+ * Authors: Xavier Claessens <xclaesse@gmail.com>
+ *          Thomas Meire <blackskad@gmail.com>
  */
 
 #include "empathy-adium-chat-theme.h"
 
+#include <string.h>
+#include <archive.h>
+#include <archive_entry.h>
 #define DEBUG_FLAG EMPATHY_DEBUG_OTHER
 #include <libempathy/empathy-debug.h>
 #include <libempathy/empathy-utils.h>
@@ -35,6 +43,7 @@
 G_DEFINE_TYPE (EmpathyAdiumChatTheme, empathy_adium_chat_theme, EMPATHY_TYPE_CHAT_THEME);
 
 typedef struct _EmpathyAdiumChatThemePriv EmpathyAdiumChatThemePriv;
+
 
 struct _EmpathyAdiumChatThemePriv
 {
@@ -121,7 +130,7 @@ empathy_adium_chat_theme_discover ()
 }
 
 static void
-empathy_theme_manager_theme_file_loaded (GObject *source_object,
+empathy_adium_chat_theme_file_loaded (GObject *source_object,
     GAsyncResult *result,
     gpointer user_data)
 {
@@ -141,10 +150,43 @@ empathy_theme_manager_theme_file_loaded (GObject *source_object,
     }
   else
     {
-      g_message ("Loaded the contents of %s", filename);
+      /* extract the content to THEME_DIRECTORY, using libarchive */
+      struct archive *archive;
+      struct archive_entry *entry;
+      gchar *target;
+      int res;
 
-      /* extract the content to THEME_DIRECTORY */
-      /* */
+      archive = archive_read_new ();
+      archive_read_support_format_all (archive);
+      archive_read_support_compression_all (archive);
+
+      if ((res = archive_read_open_memory (archive, contents, length)) != ARCHIVE_OK)
+        {
+          /* FIXME: show a nice error dialog */
+          g_warning ("Failed to open archive from memory! (%d: %s) ",
+              res, archive_error_string (archive));
+          return;
+        }
+      target = g_build_path (G_DIR_SEPARATOR_S, g_get_user_data_dir (), THEME_DIRECTORY, NULL);
+      while (archive_read_next_header (archive, &entry) != ARCHIVE_EOF)
+        {
+          gchar *entry_target = g_build_path (G_DIR_SEPARATOR_S,
+              target, archive_entry_pathname (entry), NULL);
+          archive_entry_set_pathname (entry, entry_target);
+          g_message ("extracting: %s", archive_entry_pathname (entry));          
+          if ((res = archive_read_extract (archive, entry, 0)) != ARCHIVE_OK)
+            {
+              /* FIXME: show a nice error dialog */
+              g_warning ("Failed to extract entry from archive! (%d: %s)",
+                  res, archive_error_string (archive));
+              break;
+            }
+          g_free (entry_target);
+        }
+      archive_read_close(archive);
+      archive_read_finish(archive);
+      g_free(contents);
+      g_free(target);
     }
   g_free (filename);
 }

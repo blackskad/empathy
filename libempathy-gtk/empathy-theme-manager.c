@@ -81,9 +81,12 @@ empathy_theme_manager_get (void)
 void
 empathy_theme_manager_install (gchar *path)
 {
-  /* only adium themes are installable atm, so that's easy. */ 
+#ifdef HAVE_WEBKIT
   g_message ("Installing theme from %s", path);
   empathy_adium_chat_theme_install (path);
+#else
+  g_message ("Can't install new themes. Empathy was compiled without webkit support!");
+#endif
 }
 
 void

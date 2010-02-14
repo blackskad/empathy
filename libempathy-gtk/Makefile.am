@@ -146,7 +146,8 @@ libempathy_gtk_la_LIBADD =			\
 	$(GEOCLUE_LIBS)				\
 	$(MEEGO_LIBS)				\
 	$(WEBKIT_LIBS)				\
-	$(top_builddir)/libempathy/libempathy.la
+	$(top_builddir)/libempathy/libempathy.la \
+	-larchive
 
 check_c_sources = \
     $(libempathy_gtk_handwritten_source) \
