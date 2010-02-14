@@ -69,28 +69,46 @@ empathy_chat_theme_get_name (EmpathyChatTheme *theme)
 static void
 empathy_chat_theme_create_thumbnail (EmpathyChatTheme *theme)
 {
-  GtkWidget *window;
   GdkPixmap *full;
   EmpathyChatView *view;
-  GdkRectangle rect = {0, 0, 100, 100};
-  
+  GtkWidget *window;
+  GError *error = NULL;
+  int width, height;
+ 
   EmpathyChatThemePriv *priv = GET_PRIV (theme);
 
   /* replay the dummy conversation */
   view = empathy_chat_theme_create_view (theme);
+  
+  /* FIXME: GtkTextView doesn't like GtkOffscreenWindow, see #609818 */
+  if (GTK_IS_TEXT_VIEW (view))
+    {
+      return;
+    }
+
+  /* Render the view to an offscreen window. After that, force GTK+ to handle
+   * all pening events. The resulting pixmap would be just gray if those events
+   * aren't handled first. An async version would get rid of the forcing
+   */
+  window = gtk_offscreen_window_new ();
+  gtk_container_add (GTK_CONTAINER (window), GTK_WIDGET (view));
+  gtk_widget_show_all (window);
+
+  while (gtk_events_pending())
+  {
+    gtk_main_iteration_do (FALSE);
+  }
 
   /* get a snapshot and create the preview, the easy way...
    * FIXME: develop an algorithm to discover the interesting parts of an image
-   * FIXME: needs GtkOffscreenWindow to work without hacks
    * */
-  window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  gtk_container_add (GTK_CONTAINER (window), GTK_WIDGET (view));
-  gtk_widget_show_all (GTK_WIDGET (window));
-  full = gtk_widget_get_snapshot (GTK_WIDGET(window), &rect);
+  full = gtk_offscreen_window_get_pixmap (GTK_OFFSCREEN_WINDOW (window));
+  gdk_drawable_get_size (full, &width, &height);
   priv->thumbnail = gdk_pixbuf_get_from_drawable (NULL, full, gdk_colormap_get_system(),
-      0, 0, 0, 0, 100, 100);
+      0, 0, 0, 0, width, height);
 
   /* save the preview to the cache */
+  gdk_pixbuf_save (priv->thumbnail, "/tmp/test.jpg", "jpeg", &error, "quality", "100", NULL);
 }
 
 static void
