@@ -2,7 +2,6 @@
 /*
  * Copyright (C) 2005-2007 Imendio AB
  * Copyright (C) 2008 Collabora Ltd.
- * Copyright (C) 2010 Thomas Meire <blackskad@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -94,10 +93,14 @@ empathy_adium_chat_theme_discover_in_dir (gchar *dirpath,
                   themes = g_list_prepend (themes, theme);
                 }
             }
+          else if (g_file_test (path, G_FILE_TEST_IS_DIR))
+            {
+              themes = empathy_adium_chat_theme_discover_in_dir (path, themes);
+            }
           g_free (path);
           name = g_dir_read_name (dir);
         }
-        g_dir_close (dir);
+      g_dir_close (dir);
     }
   else
     {
