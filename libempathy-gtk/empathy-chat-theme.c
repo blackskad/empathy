@@ -47,6 +47,13 @@ typedef enum {
   PROP_THEME_VARIANT
 } EmpathyChatThemeProperty;
 
+enum {
+  VARIANT_CHANGED,
+  LAST_SIGNAL
+};
+
+static guint signals[LAST_SIGNAL] = { 0 };
+
 EmpathyChatView *
 empathy_chat_theme_create_view (EmpathyChatTheme *self)
 {
@@ -74,17 +81,25 @@ empathy_chat_theme_create_thumbnail (EmpathyChatTheme *theme)
   GtkWidget *window;
   GError *error = NULL;
   int width, height;
- 
+  GtkAllocation allocation = {0, 0, 400, 400};
+
   EmpathyChatThemePriv *priv = GET_PRIV (theme);
 
   /* replay the dummy conversation */
   view = empathy_chat_theme_create_view (theme);
-  
+  while (gtk_events_pending())
+    {
+      gtk_main_iteration_do (FALSE);
+    }
+
   /* FIXME: GtkTextView doesn't like GtkOffscreenWindow, see #609818 */
   if (GTK_IS_TEXT_VIEW (view))
     {
       return;
     }
+  empathy_chat_view_append_event (view, "blackskad has left the room");
+
+  gtk_widget_size_allocate (GTK_WIDGET (view), &allocation);
 
   /* Render the view to an offscreen window. After that, force GTK+ to handle
    * all pening events. The resulting pixmap would be just gray if those events
@@ -95,9 +110,9 @@ empathy_chat_theme_create_thumbnail (EmpathyChatTheme *theme)
   gtk_widget_show_all (window);
 
   while (gtk_events_pending())
-  {
-    gtk_main_iteration_do (FALSE);
-  }
+    {
+      gtk_main_iteration_do (FALSE);
+    }
 
   /* get a snapshot and create the preview, the easy way...
    * FIXME: develop an algorithm to discover the interesting parts of an image
@@ -105,7 +120,7 @@ empathy_chat_theme_create_thumbnail (EmpathyChatTheme *theme)
   full = gtk_offscreen_window_get_pixmap (GTK_OFFSCREEN_WINDOW (window));
   gdk_drawable_get_size (full, &width, &height);
   priv->thumbnail = gdk_pixbuf_get_from_drawable (NULL, full, gdk_colormap_get_system(),
-      0, 0, 0, 0, width, height);
+      0, 0, 0, 0, (width < 100) ? width : 100, (height < 100) ? height : 100);
 
   /* save the preview to the cache */
   gdk_pixbuf_save (priv->thumbnail, "/tmp/test.jpg", "jpeg", &error, "quality", "100", NULL);
@@ -154,6 +169,7 @@ empathy_chat_theme_set_selected_variant (EmpathyChatTheme *theme,
       g_free (priv->variant);
     }
   priv->variant = g_strdup (variant);
+  g_signal_emit (theme, signals[VARIANT_CHANGED], 0);
 }
 
 gchar *
@@ -251,6 +267,15 @@ empathy_chat_theme_class_init (EmpathyChatThemeClass *class)
           "The theme variants",
           "A list of strings with the names of the theme variants",
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  signals[VARIANT_CHANGED] = g_signal_new ("variant-changed",
+      G_OBJECT_CLASS_TYPE (object_class),
+      G_SIGNAL_RUN_LAST,
+      0,
+      NULL, NULL,
+      g_cclosure_marshal_VOID__VOID,
+      G_TYPE_NONE,
+      0);
 
   g_type_class_add_private (object_class, sizeof (EmpathyChatThemePriv));
 }
