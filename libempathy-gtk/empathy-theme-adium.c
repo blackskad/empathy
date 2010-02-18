@@ -1241,7 +1241,7 @@ empathy_adium_data_get_type (void)
 }
 
 EmpathyAdiumData  *
-empathy_adium_data_new_with_info (const gchar *path, const gchar *variant, GHashTable *info)
+empathy_adium_data_new_with_info (const gchar *path, GHashTable *info)
 {
 	EmpathyAdiumData *data;
 	gchar            *file;
@@ -1349,25 +1349,20 @@ empathy_adium_data_new_with_info (const gchar *path, const gchar *variant, GHash
 	g_string_append (string, data->basedir);
 	g_string_append (string, strv[i++]);
 	if (len == 6) {
+		const gchar *variant;
+
 		/* We include main.css by default */
 		g_string_append_printf (string, "@import url(\"%s\");", css_path);
 		g_string_append (string, strv[i++]);
-		if (variant == NULL) {
-			variant = tp_asv_get_string (data->info, "DefaultVariant");
-		}
-		if (variant != NULL) {
+		variant = tp_asv_get_string (data->info, "DefaultVariant");
+		if (variant) {
 			g_string_append (string, "Variants/");
 			g_string_append (string, variant);
 			g_string_append (string, ".css");
 		}
 	} else {
-		if (variant) {
-			g_string_append (string, "Variants/");
-			g_string_append (string, variant);
-			g_string_append (string, ".css");
-		} else {
-			g_string_append (string, css_path);
-		}
+		/* FIXME: We should set main.css OR the variant css */
+		g_string_append (string, css_path);
 	}
 	g_string_append (string, strv[i++]);
 	g_string_append (string, ""); /* We don't want header */
@@ -1377,7 +1372,6 @@ empathy_adium_data_new_with_info (const gchar *path, const gchar *variant, GHash
 		g_string_append (string, footer_html);
 	}
 	g_string_append (string, strv[i++]);
-	//g_message ("%s", string->str);
 	data->template_html = g_string_free (string, FALSE);
 
 	g_free (footer_html);
@@ -1395,7 +1389,7 @@ empathy_adium_data_new (const gchar *path)
 	GHashTable *info;
 
 	info = empathy_adium_info_new (path);
-	data = empathy_adium_data_new_with_info (path, NULL, info);
+	data = empathy_adium_data_new_with_info (path, info);
 	g_hash_table_unref (info);
 
 	return data;

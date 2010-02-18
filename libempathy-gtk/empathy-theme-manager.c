@@ -27,6 +27,7 @@
 #include <gtk/gtk.h>
 #include <telepathy-glib/util.h>
 #include <libempathy/empathy-utils.h>
+#include <libempathy-gtk/empathy-conf.h>
 
 #include "empathy-theme-manager.h"
 
@@ -46,7 +47,7 @@ typedef struct {
 } EmpathyThemeManagerPriv;
 
 enum {
-	THEME_CHANGED,
+	SELECTION_CHANGED,
 	LAST_SIGNAL
 };
 
@@ -89,24 +90,54 @@ empathy_theme_manager_install (gchar *path)
 #endif
 }
 
+static void
+empathy_theme_manager_selected_variant_changed (EmpathyChatTheme *theme,
+    gpointer user_data)
+{
+  gchar *variant = empathy_chat_theme_get_selected_variant (theme);
+  g_message ("SAVING VARIANT TO GCONF");
+  empathy_conf_set_string (empathy_conf_get (), EMPATHY_PREFS_CHAT_THEME_VARIANT, variant);
+  g_free (variant);
+}
+
 void
 empathy_theme_manager_select (EmpathyThemeManager *self,
     EmpathyChatTheme *theme)
 {
+  static gulong id = -1;
+
+  gchar *name, *variant;
   EmpathyThemeManagerPriv *priv = GET_PRIV (self);
 
   g_assert (EMPATHY_IS_CHAT_THEME (theme));
 
   if (priv->selected)
   {
+    g_signal_handler_disconnect (priv->selected, id);
     g_object_unref (G_OBJECT (priv->selected));
   }
 
   g_object_ref (G_OBJECT (theme));
   priv->selected = theme;
 
-  /* FIXME: update GConf data */
-  /* FIXME: send theme-changed signal */
+  /* update gconf data */
+  name = empathy_chat_theme_get_name (theme);
+  variant = empathy_chat_theme_get_selected_variant (theme);
+  empathy_conf_set_string (empathy_conf_get (), EMPATHY_PREFS_CHAT_THEME, name);
+  empathy_conf_set_string (empathy_conf_get (), EMPATHY_PREFS_CHAT_THEME_VARIANT, variant);
+  g_free (name);
+  g_free (variant);
+
+  /* Connect to the theme to track changes to the selected variant. */
+  id = g_signal_connect (theme, "variant-changed",
+      G_CALLBACK (empathy_theme_manager_selected_variant_changed), NULL);
+}
+
+EmpathyChatTheme *
+empathy_theme_manager_get_selection (EmpathyThemeManager *self)
+{
+  EmpathyThemeManagerPriv *priv = GET_PRIV (self);
+  return priv->selected;
 }
 
 EmpathyChatView *
@@ -168,7 +199,7 @@ empathy_theme_manager_class_init (EmpathyThemeManagerClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  signals[THEME_CHANGED] = g_signal_new ("theme-changed",
+  signals[SELECTION_CHANGED] = g_signal_new ("selection-changed",
       G_OBJECT_CLASS_TYPE (object_class),
       G_SIGNAL_RUN_LAST,
       0,
@@ -188,6 +219,7 @@ empathy_theme_manager_init (EmpathyThemeManager *self)
   int j;
   GList *i;
   GList *themes;
+  gchar *conf_name, *conf_variant;
   EmpathyThemeManagerPriv *priv;
 
   /* setup the columns */
@@ -197,8 +229,11 @@ empathy_theme_manager_init (EmpathyThemeManager *self)
     EMPATHY_TYPE_CHAT_THEME   /* The chat theme */
   };
 
-	gtk_list_store_set_column_types (GTK_LIST_STORE (self),
-	    EMPATHY_THEME_MANAGER_COUNT, types);
+  gtk_list_store_set_column_types (GTK_LIST_STORE (self),
+    EMPATHY_THEME_MANAGER_COUNT, types);
+
+  gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (self),
+    EMPATHY_THEME_MANAGER_NAME, GTK_SORT_ASCENDING);
 
   /* add priv struct */
   priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
@@ -206,13 +241,21 @@ empathy_theme_manager_init (EmpathyThemeManager *self)
   self->priv = priv;
 
   /* discover all themes */
+  empathy_conf_get_string (empathy_conf_get (), EMPATHY_PREFS_CHAT_THEME, &conf_name);
+  empathy_conf_get_string (empathy_conf_get (), EMPATHY_PREFS_CHAT_THEME_VARIANT, &conf_variant);
   for (j = 0; providers[j]; j++)
     {
       themes = providers[j]();
-      /* FIXME: don't reinvent g_list_foreach */
       for (i = themes; i; i=i->next)
         {
+          gchar *name = empathy_chat_theme_get_name (i->data);
           empathy_theme_manager_add_theme (self, i->data);
+          if (g_strcmp0 (name, conf_name) == 0)
+            {
+              empathy_chat_theme_set_selected_variant (i->data, conf_variant);
+              empathy_theme_manager_select (self, i->data);
+            }
+          g_free (name);
         }
     }
 }

@@ -909,61 +909,43 @@ preferences_radio_button_toggled_cb (GtkWidget *button,
 
 	empathy_conf_set_string (empathy_conf_get (), key, value);
 }
+#endif
 
 static void
-preferences_theme_notify_cb (EmpathyConf *conf,
-			     const gchar *key,
-			     gpointer     user_data)
+preferences_theme_notify_cb (EmpathyThemeManager *manager,
+                             gpointer user_data)
 {
 	EmpathyPreferences *preferences = user_data;
 	GtkIconView        *iconview;
-	gchar              *conf_name;
-	gchar              *conf_path;
-	GtkTreeModel       *model;
 	GtkTreeIter         iter;
 	gboolean            found = FALSE;
+	EmpathyChatTheme   *selection;
+	GtkTreeModel       *model = GTK_TREE_MODEL (manager);
 
-	if (!empathy_conf_get_string (conf, EMPATHY_PREFS_CHAT_THEME, &conf_name)) {
-		return;
-	}
-
-	if (!empathy_conf_get_string (conf, EMPATHY_PREFS_CHAT_ADIUM_PATH, &conf_path)) {
-		g_free (conf_name);
-		return;
-	}
+	g_message ("theme_notify_cb");
 
 	iconview = GTK_ICON_VIEW (preferences->iconview_chat_theme);
-	model = gtk_icon_view_get_model (iconview);
-	if (gtk_tree_model_get_iter_first (model, &iter)) {
-		gboolean is_adium;
-		gchar *name;
-		gchar *path;
+	selection = empathy_theme_manager_get_selection (manager);
 
+	if (gtk_tree_model_get_iter_first (model, &iter)) {
+		EmpathyChatTheme *theme;
+		/* FIXME: this loop can be avoided when we ask a GtkTreePath
+                 * from the ThemeManager. Complexity is now 2n when a theme is
+                 * changed from gconf. */
 		do {
 			gtk_tree_model_get (model, &iter,
-					    COL_COMBO_IS_ADIUM, &is_adium,
-					    COL_COMBO_NAME, &name,
-					    COL_COMBO_PATH, &path,
-					    -1);
+			                    EMPATHY_THEME_MANAGER_THEME, &theme,
+			                    -1);
 
-			if (!tp_strdiff (name, conf_name)) {
-				if (tp_strdiff (name, "adium") ||
-				    !tp_strdiff (path, conf_path)) {
-					GtkTreePath *treepath = gtk_tree_model_get_path (model, &iter);
-					found = TRUE;
-					
-					gtk_icon_view_select_path (iconview, treepath);
-					
-					gtk_tree_path_free (treepath);
-					g_free (name);
-					g_free (path);
-					break;
-				}
+			if (theme == selection) {
+				GtkTreePath *treepath = gtk_tree_model_get_path (model, &iter);
+				gtk_icon_view_select_path (iconview, treepath);				
+				gtk_tree_path_free (treepath);
+
+				found = TRUE;
 			}
-
-			g_free (name);
-			g_free (path);
-		} while (gtk_tree_model_iter_next (model, &iter));
+			g_object_unref (theme);
+		} while (gtk_tree_model_iter_next (model, &iter) && !found);
 	}
 
 	/* Fallback to the first one. */
@@ -974,11 +956,7 @@ preferences_theme_notify_cb (EmpathyConf *conf,
 			gtk_tree_path_free (treepath);
 		}
 	}
-
-	g_free (conf_name);
-	g_free (conf_path);
 }
-#endif
 
 static void
 preferences_theme_changed_cb (GtkIconView        *iconview,
@@ -1018,12 +996,14 @@ static void
 preferences_themes_show_select_variants_dialog (EmpathyPreferences *preferences,
 						EmpathyChatTheme *theme)
 {
+	gchar *current;
 	GList *variants;
 	GtkWidget *dialog;
 	GtkWidget *content;
 	GtkWidget *box;
 	GtkWidget *label;
 	GtkWidget *combobox;
+	int i = 0;
 
 	dialog = gtk_dialog_new_with_buttons ("Select theme variant",
 	                             GTK_WINDOW (preferences->dialog),
@@ -1038,9 +1018,14 @@ preferences_themes_show_select_variants_dialog (EmpathyPreferences *preferences,
 	label = gtk_label_new ("Theme variant");
 	combobox = gtk_combo_box_new_text ();
 
+	current = empathy_chat_theme_get_selected_variant (theme);
 	variants = empathy_chat_theme_get_variants (theme);
 	for (; variants; variants = variants->next) {
 		gtk_combo_box_append_text (GTK_COMBO_BOX (combobox), variants->data);
+		if (g_strcmp0 (variants->data, current) == 0) {
+			gtk_combo_box_set_active (GTK_COMBO_BOX (combobox), i);
+		}
+		i++;
 	}
 
 	gtk_container_add (GTK_CONTAINER (box), label);
@@ -1118,9 +1103,6 @@ preferences_themes_setup (EmpathyPreferences *preferences)
 {
 	GtkIconView   *iconview;
 //	GtkListStore  *store;
-//	const gchar  **themes;
-//	GList         *adium_themes;
-//	gint           i;
 //	guint          id;
 //	GdkPixbuf     *dummypixbuf;
 //	GdkPixbuf     *pixbuf;
@@ -1132,37 +1114,11 @@ preferences_themes_setup (EmpathyPreferences *preferences)
 	                                      GTK_STOCK_MISSING_IMAGE,
 	                                      GTK_ICON_SIZE_DND, NULL);
 
-	gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (store),
-		COL_COMBO_VISIBLE_NAME, GTK_SORT_ASCENDING);
-
 	/* Fill the model */
 	if (0) {
 		gchar *theme_icon_name = g_strdup_printf ("theme-%s.png", themes[i]);
 		gchar *theme_icon_path = empathy_file_lookup (theme_icon_name, "src");
 		pixbuf = gdk_pixbuf_new_from_file (theme_icon_path, &error);
-	}
-
-	adium_themes = empathy_theme_manager_get_adium_themes ();
-	while (adium_themes != NULL) {
-		GHashTable *info;
-		const gchar *name;
-		const gchar *path;
-
-		info = adium_themes->data;
-		name = tp_asv_get_string (info, "CFBundleName");
-		path = tp_asv_get_string (info, "path");
-
-		if (name != NULL && path != NULL) {
-			gtk_list_store_insert_with_values (store, NULL, -1,
-				COL_COMBO_IS_ADIUM, TRUE,
-				COL_COMBO_VISIBLE_NAME, name,
-				COL_COMBO_NAME, "adium",
-				COL_COMBO_PATH, path,
-				COL_COMBO_PREVIEW, dummypixbuf,
-				-1);
-		}
-		g_hash_table_unref (info);
-		adium_themes = g_list_delete_link (adium_themes, adium_themes);
 	}
 #endif
 	gtk_icon_view_set_text_column (iconview, EMPATHY_THEME_MANAGER_NAME);
@@ -1172,11 +1128,13 @@ preferences_themes_setup (EmpathyPreferences *preferences)
 	gtk_icon_view_set_model (iconview,
 		GTK_TREE_MODEL (empathy_theme_manager_get ()));
 
+	/* select the theme from theme_manager */
+	g_signal_connect (empathy_theme_manager_get (), "selection-changed",
+		G_CALLBACK (preferences_theme_notify_cb), preferences);
+	preferences_theme_notify_cb (empathy_theme_manager_get(), preferences);
+
 #if 0
 	/* Select the theme from the gconf key and track changes */
-	preferences_theme_notify_cb (empathy_conf_get (),
-				     EMPATHY_PREFS_CHAT_THEME,
-				     preferences);
 	id = empathy_conf_notify_add (empathy_conf_get (),
 				      EMPATHY_PREFS_CHAT_THEME,
 				      preferences_theme_notify_cb,

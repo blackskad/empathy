@@ -50,8 +50,6 @@ struct _EmpathyThemeAdiumClass {
 
 GType              empathy_theme_adium_get_type (void) G_GNUC_CONST;
 EmpathyThemeAdium *empathy_theme_adium_new      (EmpathyAdiumData *data);
-void               empathy_theme_adium_set_variant (EmpathyThemeAdium *view,
-                                                    gchar *variant);
 
 gboolean           empathy_adium_path_is_valid (const gchar *path);
 GHashTable        *empathy_adium_info_new (const gchar *path);
@@ -60,7 +58,6 @@ GHashTable        *empathy_adium_info_new (const gchar *path);
 GType              empathy_adium_data_get_type (void) G_GNUC_CONST;
 EmpathyAdiumData  *empathy_adium_data_new (const gchar *path);
 EmpathyAdiumData  *empathy_adium_data_new_with_info (const gchar *path,
-                                                     const gchar *variant,
 						     GHashTable *info);
 EmpathyAdiumData  *empathy_adium_data_ref (EmpathyAdiumData *data);
 void               empathy_adium_data_unref (EmpathyAdiumData *data);

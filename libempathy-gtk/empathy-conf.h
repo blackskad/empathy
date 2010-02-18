@@ -63,7 +63,7 @@ struct _EmpathyConfClass {
 #define EMPATHY_PREFS_CHAT_SHOW_SMILEYS            EMPATHY_PREFS_PATH "/conversation/graphical_smileys"
 #define EMPATHY_PREFS_CHAT_SHOW_CONTACTS_IN_ROOMS  EMPATHY_PREFS_PATH "/conversation/show_contacts_in_rooms"
 #define EMPATHY_PREFS_CHAT_THEME                   EMPATHY_PREFS_PATH "/conversation/theme"
-#define EMPATHY_PREFS_CHAT_ADIUM_PATH              EMPATHY_PREFS_PATH "/conversation/adium_path"
+#define EMPATHY_PREFS_CHAT_THEME_VARIANT           EMPATHY_PREFS_PATH "/conversation/theme_variant"
 #define EMPATHY_PREFS_CHAT_SPELL_CHECKER_LANGUAGES EMPATHY_PREFS_PATH "/conversation/spell_checker_languages"
 #define EMPATHY_PREFS_CHAT_SPELL_CHECKER_ENABLED   EMPATHY_PREFS_PATH "/conversation/spell_checker_enabled"
 #define EMPATHY_PREFS_CHAT_NICK_COMPLETION_CHAR    EMPATHY_PREFS_PATH "/conversation/nick_completion_char"

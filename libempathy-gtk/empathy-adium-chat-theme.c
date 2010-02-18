@@ -51,51 +51,20 @@ struct _EmpathyAdiumChatThemePriv
 };
 
 static EmpathyChatTheme *
-empathy_adium_chat_theme_new (GHashTable *info, GList *variants)
+empathy_adium_chat_theme_new (GHashTable *info)
 {
   EmpathyChatTheme *theme;
   EmpathyAdiumChatThemePriv *priv;
 
   theme = EMPATHY_CHAT_THEME (g_object_new (EMPATHY_TYPE_ADIUM_CHAT_THEME,
       "theme-name", tp_asv_get_string (info, "CFBundleName"),
-      "theme-variants", variants,
+      //"theme-variants", variants,
       NULL));
 
   priv = GET_PRIV (theme);
   priv->info = info;
 
   return theme;
-}
-
-static GList*
-empathy_adium_chat_theme_discover_variants (gchar *themepath)
-{
-  GDir *dir;
-  const gchar *name;
-  GError * error = NULL;
-  GList *variants = NULL;
-  gchar *path = g_build_path (G_DIR_SEPARATOR_S,
-      themepath, "Contents", "Resources", "Variants", NULL);
-
-  if (!g_file_test (path,G_FILE_TEST_IS_DIR))
-    {
-      g_message ("Theme variants path does not exist!");
-      g_free (path);
-      return NULL;
-    }
-  dir = g_dir_open (path, 0, &error);
-  if (dir != NULL)
-    {
-      name = g_dir_read_name (dir);
-      while (name != NULL)
-        {
-          /* FIXME: check for .css extention */
-          variants = g_list_prepend (variants, g_strndup (name, strlen(name) -4));
-          name = g_dir_read_name (dir);
-        }
-    }
-  g_free (path);
-  return variants;
 }
 
 static GList*
@@ -120,10 +89,8 @@ empathy_adium_chat_theme_discover_in_dir (gchar *dirpath,
               info = empathy_adium_info_new (path);
               if (info != NULL)
                 {
-                  GList *variants = empathy_adium_chat_theme_discover_variants (path);
-                  theme = empathy_adium_chat_theme_new (info, variants);
+                  theme = empathy_adium_chat_theme_new (info);
                   themes = g_list_prepend (themes, theme);
-                  /* FIXME: free variants list */
                 }
             }
           else if (g_file_test (path, G_FILE_TEST_IS_DIR))
@@ -206,10 +173,10 @@ empathy_adium_chat_theme_file_loaded (GObject *source_object,
       target = g_build_path (G_DIR_SEPARATOR_S, g_get_user_data_dir (), THEME_DIRECTORY, NULL);
       while (archive_read_next_header (archive, &entry) != ARCHIVE_EOF)
         {
-          /* FIXME: don't extract __MACOSX folder, it's useless and confusing */
           gchar *entry_target = g_build_path (G_DIR_SEPARATOR_S,
               target, archive_entry_pathname (entry), NULL);
           archive_entry_set_pathname (entry, entry_target);
+          g_message ("extracting: %s", archive_entry_pathname (entry));          
           if ((res = archive_read_extract (archive, entry, 0)) != ARCHIVE_OK)
             {
               /* FIXME: show a nice error dialog */
@@ -260,7 +227,6 @@ empathy_adium_chat_theme_create_view (EmpathyChatTheme *theme)
 {
   EmpathyAdiumChatThemePriv *priv;
   EmpathyThemeAdium *view;
-  gchar *variant;
 
   g_return_val_if_fail (EMPATHY_IS_ADIUM_CHAT_THEME (theme), NULL);
 
@@ -268,45 +234,18 @@ empathy_adium_chat_theme_create_view (EmpathyChatTheme *theme)
   
   if (!priv->data)
     {
-      variant = empathy_chat_theme_get_selected_variant (theme);
       priv->data = empathy_adium_data_new_with_info (
           tp_asv_get_string (priv->info, "path"),
-          variant, priv->info);
-      g_free (variant);
+          priv->info);
     }
 
   view = empathy_theme_adium_new (priv->data);
-
   return EMPATHY_CHAT_VIEW (view);
-}
-
-static void
-empathy_adium_chat_theme_variant_changed (EmpathyChatTheme *theme,
-    gpointer user_data)
-{
-  gchar *variant;
-  EmpathyAdiumChatThemePriv *priv = GET_PRIV (theme);
-
-  if (priv->data != NULL)
-    {
-      /* FIXME: perhaps just reload the template, instead of all data */
-      empathy_adium_data_unref (priv->data);
-
-      variant = empathy_chat_theme_get_selected_variant (theme);
-      priv->data = empathy_adium_data_new_with_info (
-          tp_asv_get_string (priv->info, "path"),
-          variant, priv->info);
-      g_message ("Theme variant changed to %s!", variant);
-      g_free (variant);
-    }
 }
 
 static void
 empathy_adium_chat_theme_init (EmpathyAdiumChatTheme *theme)
 {
-  g_signal_connect (theme, "variant-changed",
-      G_CALLBACK (empathy_adium_chat_theme_variant_changed), NULL);
-
   theme->priv = G_TYPE_INSTANCE_GET_PRIVATE (theme,
 		EMPATHY_TYPE_ADIUM_CHAT_THEME, EmpathyAdiumChatThemePriv);
 }

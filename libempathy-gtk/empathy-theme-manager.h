@@ -59,12 +59,13 @@ struct _EmpathyThemeManagerClass {
 	GtkListStoreClass parent_class;
 };
 
-GType                   empathy_theme_manager_get_type    (void) G_GNUC_CONST;
-EmpathyThemeManager *   empathy_theme_manager_get         (void);
-void                    empathy_theme_manager_install     (gchar *path);
-void                    empathy_theme_manager_select      (EmpathyThemeManager *self,
-                                                           EmpathyChatTheme *theme);
-EmpathyChatView *       empathy_theme_manager_create_view (EmpathyThemeManager *manager);
+GType                   empathy_theme_manager_get_type      (void) G_GNUC_CONST;
+EmpathyThemeManager *   empathy_theme_manager_get           (void);
+void                    empathy_theme_manager_install       (gchar *path);
+void                    empathy_theme_manager_select        (EmpathyThemeManager *self,
+                                                             EmpathyChatTheme *theme);
+EmpathyChatTheme *      empathy_theme_manager_get_selection (EmpathyThemeManager *self);
+EmpathyChatView *       empathy_theme_manager_create_view   (EmpathyThemeManager *manager);
 
 G_END_DECLS
 
