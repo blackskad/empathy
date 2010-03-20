@@ -246,6 +246,7 @@ empathy_theme_manager_init (EmpathyThemeManager *self)
   for (j = 0; providers[j]; j++)
     {
       themes = providers[j]();
+      /* FIXME: don't reinvent g_list_foreach */
       for (i = themes; i; i=i->next)
         {
           gchar *name = empathy_chat_theme_get_name (i->data);

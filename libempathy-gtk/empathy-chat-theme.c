@@ -63,6 +63,13 @@ enum {
 
 static guint signals[LAST_SIGNAL] = { 0 };
 
+enum {
+  VARIANT_CHANGED,
+  LAST_SIGNAL
+};
+
+static guint signals[LAST_SIGNAL] = { 0 };
+
 EmpathyChatView *
 empathy_chat_theme_create_view (EmpathyChatTheme *self)
 {
@@ -277,6 +284,15 @@ empathy_chat_theme_class_init (EmpathyChatThemeClass *class)
           "The theme variants",
           "A list of strings with the names of the theme variants",
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  signals[VARIANT_CHANGED] = g_signal_new ("variant-changed",
+      G_OBJECT_CLASS_TYPE (object_class),
+      G_SIGNAL_RUN_LAST,
+      0,
+      NULL, NULL,
+      g_cclosure_marshal_VOID__VOID,
+      G_TYPE_NONE,
+      0);
 
   signals[VARIANT_CHANGED] = g_signal_new ("variant-changed",
       G_OBJECT_CLASS_TYPE (object_class),
