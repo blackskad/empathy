@@ -54,7 +54,7 @@ struct _EmpathyChatTheme
 struct _EmpathyChatThemeClass
 {
   GObjectClass parent_class;
-  
+
   EmpathyChatView *(*create_view) (EmpathyChatTheme *theme);
 };
 

@@ -67,7 +67,7 @@ empathy_adium_chat_theme_new (GHashTable *info, GList *variants)
   return theme;
 }
 
-static GList*
+static GList *
 empathy_adium_chat_theme_discover_variants (gchar *themepath)
 {
   GDir *dir;
@@ -90,7 +90,7 @@ empathy_adium_chat_theme_discover_variants (gchar *themepath)
       while (name != NULL)
         {
           /* FIXME: check for .css extention */
-          variants = g_list_prepend (variants, g_strndup (name, strlen(name) -4));
+          variants = g_list_prepend (variants, g_strndup (name, strlen (name) - 4));
           name = g_dir_read_name (dir);
         }
     }
@@ -98,14 +98,13 @@ empathy_adium_chat_theme_discover_variants (gchar *themepath)
   return variants;
 }
 
-static GList*
+static GList *
 empathy_adium_chat_theme_discover_in_dir (gchar *dirpath,
     GList *themes)
 {
   GDir *dir;
   GError *error = NULL;
   const gchar *name = NULL;
-  GHashTable *info = NULL;
   EmpathyChatTheme *theme;
 
   dir = g_dir_open (dirpath, 0, &error);
@@ -115,19 +114,14 @@ empathy_adium_chat_theme_discover_in_dir (gchar *dirpath,
       while (name != NULL)
         {
           gchar *path = g_build_path (G_DIR_SEPARATOR_S, dirpath, name, NULL);
-          if (empathy_adium_path_is_valid (path))
+          theme = empathy_adium_chat_theme_new_for_path (path);
+          if (theme != NULL)
             {
-              info = empathy_adium_info_new (path);
-              if (info != NULL)
-                {
-                  GList *variants = empathy_adium_chat_theme_discover_variants (path);
-                  theme = empathy_adium_chat_theme_new (info, variants);
-                  themes = g_list_prepend (themes, theme);
-                  /* FIXME: free variants list */
-                }
+              themes = g_list_prepend (themes, theme);
             }
           else if (g_file_test (path, G_FILE_TEST_IS_DIR))
             {
+              /* recurse to find a theme in a subdir */
               themes = empathy_adium_chat_theme_discover_in_dir (path, themes);
             }
           g_free (path);
@@ -204,25 +198,32 @@ empathy_adium_chat_theme_file_loaded (GObject *source_object,
           return;
         }
       target = g_build_path (G_DIR_SEPARATOR_S, g_get_user_data_dir (), THEME_DIRECTORY, NULL);
-      while (archive_read_next_header (archive, &entry) != ARCHIVE_EOF)
+      /* A lot of those theme archives contain a useless __MACOSX folder
+       * which is just a plain copy of the theme. We don't need it,
+       * so don't extract it... */
+      if (g_strrstr (archive_entry_pathname (entry), "__MACOSX") == NULL &&
+          g_strrstr (archive_entry_pathname (entry), ".DS_Store") == NULL)
         {
-          /* FIXME: don't extract __MACOSX folder, it's useless and confusing */
-          gchar *entry_target = g_build_path (G_DIR_SEPARATOR_S,
-              target, archive_entry_pathname (entry), NULL);
-          archive_entry_set_pathname (entry, entry_target);
-          if ((res = archive_read_extract (archive, entry, 0)) != ARCHIVE_OK)
+          while (archive_read_next_header (archive, &entry) != ARCHIVE_EOF)
             {
-              /* FIXME: show a nice error dialog */
-              g_warning ("Failed to extract entry from archive! (%d: %s)",
-                  res, archive_error_string (archive));
-              break;
+              /* FIXME: don't extract __MACOSX folder, it's useless and confusing */
+              gchar *entry_target = g_build_path (G_DIR_SEPARATOR_S,
+                  target, archive_entry_pathname (entry), NULL);
+              archive_entry_set_pathname (entry, entry_target);
+              if ((res = archive_read_extract (archive, entry, 0)) != ARCHIVE_OK)
+                {
+                  /* FIXME: show a nice error dialog */
+                  g_warning ("Failed to extract entry from archive! (%d: %s)",
+                      res, archive_error_string (archive));
+                  break;
+                }
+              g_free (entry_target);
             }
-          g_free (entry_target);
         }
-      archive_read_close(archive);
-      archive_read_finish(archive);
-      g_free(contents);
-      g_free(target);
+      archive_read_close (archive);
+      archive_read_finish (archive);
+      g_free (contents);
+      g_free (target);
     }
   g_free (filename);
 }
@@ -265,7 +266,7 @@ empathy_adium_chat_theme_create_view (EmpathyChatTheme *theme)
   g_return_val_if_fail (EMPATHY_IS_ADIUM_CHAT_THEME (theme), NULL);
 
   priv = GET_PRIV (theme);
-  
+
   if (!priv->data)
     {
       variant = empathy_chat_theme_get_selected_variant (theme);
@@ -320,5 +321,22 @@ empathy_adium_chat_theme_class_init (EmpathyAdiumChatThemeClass *theme_class)
   chat_theme_class->create_view = empathy_adium_chat_theme_create_view;
 
   g_type_class_add_private (object_class, sizeof (EmpathyAdiumChatThemePriv));
+}
+
+EmpathyChatTheme *
+empathy_adium_chat_theme_new_for_path (gchar *path)
+{
+  EmpathyChatTheme *theme = NULL;
+  if (empathy_adium_path_is_valid (path))
+    {
+      GHashTable *info = NULL;
+      info = empathy_adium_info_new (path);
+      if (info != NULL)
+        {
+          GList *variants = empathy_adium_chat_theme_discover_variants (path);
+          theme = empathy_adium_chat_theme_new (info, variants);
+        }
+    }
+  return theme;
 }
 

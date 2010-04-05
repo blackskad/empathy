@@ -58,6 +58,8 @@ GType  empathy_adium_chat_theme_get_type (void);
 void   empathy_adium_chat_theme_install  (gchar* path);
 GList *empathy_adium_chat_theme_discover (void);
 
+EmpathyChatTheme *empathy_adium_chat_theme_new_for_path (gchar *path);
+
 G_END_DECLS
 
 #endif /* __EMPATHY_ADIUM_CHAT_THEME_H__ */

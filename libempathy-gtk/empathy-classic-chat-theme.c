@@ -96,7 +96,6 @@ empathy_classic_chat_theme_create_view (EmpathyChatTheme *theme)
       "foreground", "indian red",
       "weight", PANGO_WEIGHT_BOLD,
       NULL);
-   
   return EMPATHY_CHAT_VIEW (irc_view);
 }
 

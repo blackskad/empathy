@@ -18,6 +18,7 @@
  */
 
 #include <glib.h>
+#include <glib/gstdio.h>
 #include <glib-object.h>
 
 #include <libempathy/empathy-utils.h>
@@ -56,28 +57,14 @@ enum {
 
 static guint signals[LAST_SIGNAL] = { 0 };
 
-enum {
-  VARIANT_CHANGED,
-  LAST_SIGNAL
-};
-
-static guint signals[LAST_SIGNAL] = { 0 };
-
-enum {
-  VARIANT_CHANGED,
-  LAST_SIGNAL
-};
-
-static guint signals[LAST_SIGNAL] = { 0 };
-
 EmpathyChatView *
 empathy_chat_theme_create_view (EmpathyChatTheme *self)
 {
   g_return_val_if_fail (EMPATHY_IS_CHAT_THEME (self), NULL);
 
-  if (EMPATHY_CHAT_THEME_GET_CLASS(self)->create_view)
+  if (EMPATHY_CHAT_THEME_GET_CLASS (self)->create_view)
     {
-      return EMPATHY_CHAT_THEME_GET_CLASS(self)->create_view(self);
+      return EMPATHY_CHAT_THEME_GET_CLASS (self)->create_view (self);
     }
   return NULL;
 }
@@ -90,7 +77,8 @@ empathy_chat_theme_get_name (EmpathyChatTheme *theme)
 }
 
 static void
-empathy_chat_theme_create_thumbnail (EmpathyChatTheme *theme)
+empathy_chat_theme_create_thumbnail (EmpathyChatTheme *theme,
+    gchar *cachefile)
 {
   GdkPixmap *full;
   EmpathyChatView *view;
@@ -101,31 +89,34 @@ empathy_chat_theme_create_thumbnail (EmpathyChatTheme *theme)
 
   EmpathyChatThemePriv *priv = GET_PRIV (theme);
 
-  /* replay the dummy conversation */
+  /* Create a new theme view, and replay a dummy conversation. Force GTK+ to
+   * handle all events before replaying the conversation. If not, we might
+   * see some javascript errors and no messages in the screenshot.
+   */
   view = empathy_chat_theme_create_view (theme);
-  while (gtk_events_pending())
-    {
-      gtk_main_iteration_do (FALSE);
-    }
+  gtk_widget_size_allocate (GTK_WIDGET (view), &allocation);
 
-  /* FIXME: GtkTextView doesn't like GtkOffscreenWindow, see #609818 */
+  /* FIXME: GtkTextView doesn't like GtkOffscreenWindow, see #609818*/ 
   if (GTK_IS_TEXT_VIEW (view))
     {
       return;
     }
-  empathy_chat_view_append_event (view, "blackskad has left the room");
 
-  gtk_widget_size_allocate (GTK_WIDGET (view), &allocation);
+  while (gtk_events_pending ())
+    {
+      gtk_main_iteration_do (FALSE);
+    }
+
+  empathy_chat_view_append_event (view, "blackskad has left the room");
 
   /* Render the view to an offscreen window. After that, force GTK+ to handle
    * all pening events. The resulting pixmap would be just gray if those events
-   * aren't handled first. An async version would get rid of the forcing
-   */
+   * aren't handled first. An async version would get rid of the forcing */
   window = gtk_offscreen_window_new ();
   gtk_container_add (GTK_CONTAINER (window), GTK_WIDGET (view));
   gtk_widget_show_all (window);
 
-  while (gtk_events_pending())
+  while (gtk_events_pending ())
     {
       gtk_main_iteration_do (FALSE);
     }
@@ -135,24 +126,55 @@ empathy_chat_theme_create_thumbnail (EmpathyChatTheme *theme)
    * */
   full = gtk_offscreen_window_get_pixmap (GTK_OFFSCREEN_WINDOW (window));
   gdk_drawable_get_size (full, &width, &height);
-  priv->thumbnail = gdk_pixbuf_get_from_drawable (NULL, full, gdk_colormap_get_system(),
+  priv->thumbnail = gdk_pixbuf_get_from_drawable (NULL, full, gdk_colormap_get_system (),
       0, 0, 0, 0, (width < 100) ? width : 100, (height < 100) ? height : 100);
 
   /* save the preview to the cache */
-  gdk_pixbuf_save (priv->thumbnail, "/tmp/test.jpg", "jpeg", &error, "quality", "100", NULL);
+  gdk_pixbuf_save (priv->thumbnail, cachefile, "png", &error, NULL);
+  if (error)
+    {
+      g_message("Failed to save thumbnail for theme %s: %s\n", priv->name, error->message);
+    }
+  gtk_widget_destroy(window);
 }
 
 static void
 empathy_chat_theme_load_thumbnail (EmpathyChatTheme *theme)
 {
-  if (FALSE)
+  gchar *cachefile;
+  gchar *cachepath;
+
+  EmpathyChatThemePriv *priv = GET_PRIV (theme);
+
+  /* test if the cache dir exists */
+  cachepath = g_build_path (G_DIR_SEPARATOR_S, g_get_user_cache_dir (),
+      G_DIR_SEPARATOR_S, "empathy/themes/thumnails/", NULL);
+  if (!g_file_test(cachepath, G_FILE_TEST_EXISTS))
     {
-      /* load preview from cache file */
+      g_mkdir_with_parents (cachepath, 777);
     }
-  else
+
+  /* let's try to load the thumbnail from the cache */
+  cachefile = g_strdup_printf ("%s/%s.png", cachepath, priv->name);
+  if (g_file_test(cachefile, G_FILE_TEST_EXISTS))
     {
-      empathy_chat_theme_create_thumbnail (theme);
+      GError *error = NULL;
+      priv->thumbnail = gdk_pixbuf_new_from_file (cachefile, &error);
+      if (error)
+        {
+          g_message ("Failed to load thumnail from cache: %s", error->message);
+        }
+      else { g_message ("yay, loaded from file :D");}
     }
+
+  /* thumbnail is still null, create a new one */
+  if (priv->thumbnail == NULL)
+    {
+      empathy_chat_theme_create_thumbnail (theme, cachefile);
+    }
+
+  g_free(cachefile);
+  g_free(cachepath);
 }
 
 GdkPixbuf *
@@ -197,7 +219,7 @@ empathy_chat_theme_get_selected_variant (EmpathyChatTheme *theme)
 }
 
 static void
-empathy_chat_theme_get_property(GObject *object,
+empathy_chat_theme_get_property (GObject *object,
     guint param_id,
     GValue *value,
     GParamSpec *pspec)
@@ -229,7 +251,7 @@ empathy_chat_theme_set_property (GObject *object,
     {
       case PROP_THEME_NAME:
         g_assert (priv->name == NULL);
-        priv->name = g_strdup (g_value_get_string (value)); 
+        priv->name = g_strdup (g_value_get_string (value));
         break;
       case PROP_THEME_THUMBNAIL:
         g_assert (priv->thumbnail == NULL);
@@ -284,24 +306,6 @@ empathy_chat_theme_class_init (EmpathyChatThemeClass *class)
           "The theme variants",
           "A list of strings with the names of the theme variants",
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  signals[VARIANT_CHANGED] = g_signal_new ("variant-changed",
-      G_OBJECT_CLASS_TYPE (object_class),
-      G_SIGNAL_RUN_LAST,
-      0,
-      NULL, NULL,
-      g_cclosure_marshal_VOID__VOID,
-      G_TYPE_NONE,
-      0);
-
-  signals[VARIANT_CHANGED] = g_signal_new ("variant-changed",
-      G_OBJECT_CLASS_TYPE (object_class),
-      G_SIGNAL_RUN_LAST,
-      0,
-      NULL, NULL,
-      g_cclosure_marshal_VOID__VOID,
-      G_TYPE_NONE,
-      0);
 
   signals[VARIANT_CHANGED] = g_signal_new ("variant-changed",
       G_OBJECT_CLASS_TYPE (object_class),

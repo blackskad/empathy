@@ -939,7 +939,7 @@ preferences_theme_notify_cb (EmpathyThemeManager *manager,
 
 			if (theme == selection) {
 				GtkTreePath *treepath = gtk_tree_model_get_path (model, &iter);
-				gtk_icon_view_select_path (iconview, treepath);				
+				gtk_icon_view_select_path (iconview, treepath);
 				gtk_tree_path_free (treepath);
 
 				found = TRUE;
@@ -963,7 +963,7 @@ preferences_theme_changed_cb (GtkIconView        *iconview,
 			      EmpathyPreferences *preferences)
 {
 	GList *selection = gtk_icon_view_get_selected_items (iconview);
-	
+
 	if (selection) {
 		GtkTreePath *treepath = selection->data;
 		GtkTreeModel *model = gtk_icon_view_get_model (iconview);
@@ -1039,7 +1039,7 @@ preferences_themes_show_select_variants_dialog (EmpathyPreferences *preferences,
 		empathy_chat_theme_set_selected_variant (theme, variant);
 		g_free (variant);
 	}
-	
+
 	gtk_widget_destroy (dialog);
 }
 
@@ -1056,7 +1056,7 @@ preferences_themes_edit_cb (GtkButton *button,
 
 	// get selected theme from iconview
 	selection = gtk_icon_view_get_selected_items (iconview);
-	
+
 	if (selection) {
 		GtkTreePath *treepath = selection->data;
 		GtkTreeModel *model = gtk_icon_view_get_model (iconview);
@@ -1068,7 +1068,7 @@ preferences_themes_edit_cb (GtkButton *button,
 					    EMPATHY_THEME_MANAGER_THEME, &theme,
 					    -1);
 			preferences_themes_show_select_variants_dialog (preferences, theme);
-			g_object_unref (theme);	
+			g_object_unref (theme);
 		}
 		g_list_foreach (selection, (GFunc) gtk_tree_path_free, NULL);
 		g_list_free (selection);
@@ -1131,7 +1131,7 @@ preferences_themes_setup (EmpathyPreferences *preferences)
 	/* select the theme from theme_manager */
 	g_signal_connect (empathy_theme_manager_get (), "selection-changed",
 		G_CALLBACK (preferences_theme_notify_cb), preferences);
-	preferences_theme_notify_cb (empathy_theme_manager_get(), preferences);
+	preferences_theme_notify_cb (empathy_theme_manager_get (), preferences);
 
 #if 0
 	/* Select the theme from the gconf key and track changes */

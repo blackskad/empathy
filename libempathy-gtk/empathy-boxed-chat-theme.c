@@ -94,7 +94,7 @@ empathy_boxed_chat_theme_create_view (EmpathyChatTheme *theme)
 
   view = empathy_theme_boxes_new ();
 
-  variant = empathy_chat_theme_get_selected_variant (theme);  
+  variant = empathy_chat_theme_get_selected_variant (theme);
   if (g_strcmp0 (variant, "clean") == 0)
     {
       empathy_theme_boxes_use_system_colors (view, FALSE);

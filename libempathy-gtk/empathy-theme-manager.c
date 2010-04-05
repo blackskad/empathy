@@ -38,6 +38,7 @@
 
 #ifdef HAVE_WEBKIT
 #include "empathy-adium-chat-theme.h"
+#include "empathy-adium-theme-monitor.h"
 #endif
 
 #define GET_PRIV(obj) EMPATHY_GET_PRIV (obj, EmpathyThemeManager)
@@ -75,7 +76,6 @@ empathy_theme_manager_get (void)
     {
       manager = g_object_new (EMPATHY_TYPE_THEME_MANAGER, NULL);
     }
-
   return manager;
 }
 
@@ -83,7 +83,6 @@ void
 empathy_theme_manager_install (gchar *path)
 {
 #ifdef HAVE_WEBKIT
-  g_message ("Installing theme from %s", path);
   empathy_adium_chat_theme_install (path);
 #else
   g_message ("Can't install new themes. Empathy was compiled without webkit support!");
@@ -169,7 +168,7 @@ empathy_theme_manager_add_theme (EmpathyThemeManager *self,
     EmpathyChatTheme *theme)
 {
   GtkTreeIter iter;
-  
+
   /* FIXME: check if theme is already present? */
   gtk_list_store_append (GTK_LIST_STORE (self), &iter);
   gtk_list_store_set (GTK_LIST_STORE (self), &iter,
@@ -192,6 +191,14 @@ theme_manager_finalize (GObject *object)
 #endif
 
   G_OBJECT_CLASS (empathy_theme_manager_parent_class)->finalize (object);
+}
+
+static void
+empathy_theme_manager_theme_added_cb (EmpathyAdiumThemeMonitor *monitor,
+    EmpathyChatTheme *theme,
+    gpointer user_data) {
+
+  empathy_theme_manager_add_theme (user_data, theme);
 }
 
 static void
@@ -221,6 +228,9 @@ empathy_theme_manager_init (EmpathyThemeManager *self)
   GList *themes;
   gchar *conf_name, *conf_variant;
   EmpathyThemeManagerPriv *priv;
+#if HAVE_WEBKIT
+  EmpathyAdiumThemeMonitor *monitor;
+#endif
 
   /* setup the columns */
   GType types[] = {
@@ -258,5 +268,11 @@ empathy_theme_manager_init (EmpathyThemeManager *self)
           g_free (name);
         }
     }
+
+#if HAVE_WEBKIT
+  monitor = empathy_adium_theme_monitor_new ();
+  g_signal_connect (monitor, "theme-added",
+    G_CALLBACK (empathy_theme_manager_theme_added_cb), self);
+#endif
 }
 
