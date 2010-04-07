@@ -67,32 +67,33 @@ empathy_adium_chat_theme_new (GHashTable *info, GList *variants)
   return theme;
 }
 
+/**
+ * Create a list of all css variants by checking all .css files in 
+ * $THEME_PATH/Contents/Resources/Variants
+ */
 static GList *
 empathy_adium_chat_theme_discover_variants (gchar *themepath)
 {
   GDir *dir;
   const gchar *name;
-  GError * error = NULL;
+  GError *error = NULL;
   GList *variants = NULL;
   gchar *path = g_build_path (G_DIR_SEPARATOR_S,
       themepath, "Contents", "Resources", "Variants", NULL);
 
-  if (g_file_test (path, G_FILE_TEST_IS_DIR))
+  dir = g_dir_open (path, 0, &error);
+  if (dir != NULL)
     {
-      dir = g_dir_open (path, 0, &error);
-      if (dir != NULL)
+      name = g_dir_read_name (dir);
+      while (name != NULL)
         {
-          name = g_dir_read_name (dir);
-          while (name != NULL)
+          if (g_str_has_suffix (name, ".css"))
             {
-              /* Only use files with .css extention */
-              if (g_str_has_suffix (name, ".css"))
-                {
-                  variants = g_list_prepend (variants, g_strndup (name, strlen (name) - 4));
-                }
-              name = g_dir_read_name (dir);
+              variants = g_list_prepend (variants, g_strndup (name, strlen (name) - 4));
             }
+          name = g_dir_read_name (dir);
         }
+      g_dir_close (dir);
     }
   g_free (path);
   return variants;
