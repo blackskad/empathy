@@ -84,17 +84,10 @@ empathy_boxed_chat_theme_discover ()
   return themes;
 }
 
-static EmpathyChatView *
-empathy_boxed_chat_theme_create_view (EmpathyChatTheme *theme)
+static void
+empathy_boxes_chat_theme_set_view_variant (EmpathyThemeBoxes *view,
+    gchar *variant)
 {
-  EmpathyThemeBoxes *view;
-  gchar *variant;
-
-  g_return_val_if_fail (EMPATHY_IS_BOXED_CHAT_THEME (theme), NULL);
-
-  view = empathy_theme_boxes_new ();
-
-  variant = empathy_chat_theme_get_selected_variant (theme);
   if (g_strcmp0 (variant, "clean") == 0)
     {
       empathy_theme_boxes_use_system_colors (view, FALSE);
@@ -109,6 +102,21 @@ empathy_boxed_chat_theme_create_view (EmpathyChatTheme *theme)
     {
       empathy_theme_boxes_use_system_colors (view, TRUE);
     }
+}
+
+static EmpathyChatView *
+empathy_boxed_chat_theme_create_view (EmpathyChatTheme *theme)
+{
+  EmpathyThemeBoxes *view;
+  gchar *variant;
+
+  g_return_val_if_fail (EMPATHY_IS_BOXED_CHAT_THEME (theme), NULL);
+
+  view = empathy_theme_boxes_new ();
+  variant = empathy_chat_theme_get_selected_variant (theme);
+
+  empathy_boxes_chat_theme_set_view_variant (view, variant);
+
   g_free (variant);
   return EMPATHY_CHAT_VIEW (view);
 }
