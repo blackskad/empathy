@@ -46,7 +46,7 @@
 
 #define GET_PRIV(obj) EMPATHY_GET_PRIV (obj, EmpathyThemeBoxes)
 typedef struct {
-	gulong   sigid;
+	gulong   style_update_id;
 	gboolean show_avatars;
 } EmpathyThemeBoxesPriv;
 
@@ -389,6 +389,15 @@ empathy_theme_boxes_init (EmpathyThemeBoxes *theme)
 
 	theme_boxes_create_tags (theme);
 
+	priv->style_update_id = 0;
+
+	priv->notify_show_avatars_id =
+		empathy_conf_notify_add (empathy_conf_get (),
+					 EMPATHY_PREFS_UI_SHOW_AVATARS,
+					 theme_boxes_notify_show_avatars_cb,
+					 theme);
+	theme_boxes_create_tags (theme);
+
 	/* Define margin */
 	g_object_set (theme,
 		      "left-margin", MARGIN,
@@ -513,11 +522,13 @@ empathy_theme_boxes_use_system_colors (EmpathyThemeBoxes *theme,
 	gboolean use_system_colors)
 {
 	EmpathyThemeBoxesPriv *priv = GET_PRIV (theme);
-	if (use_system_colors) {
-		priv->sigid = g_signal_connect (G_OBJECT (theme), "style-set",
-		                                G_CALLBACK (on_style_set_cb), NULL);
-	} else {
-		g_signal_handler_disconnect (G_OBJECT (theme), priv->sigid);
+	if (use_system_colors && priv->style_update_id == 0) {
+		/* only connect when we're not connected yet */
+		priv->style_update_id = g_signal_connect (G_OBJECT (theme), "style-set",
+				                          G_CALLBACK (on_style_set_cb), NULL);
+	} else if (!use_system_colors && priv->style_update_id != 0) {
+		/* only disconnect when there is something to disconnect */
+		g_signal_handler_disconnect (G_OBJECT (theme), priv->style_update_id);
 	}
 }
 
