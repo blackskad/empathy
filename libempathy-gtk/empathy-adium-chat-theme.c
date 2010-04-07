@@ -77,21 +77,21 @@ empathy_adium_chat_theme_discover_variants (gchar *themepath)
   gchar *path = g_build_path (G_DIR_SEPARATOR_S,
       themepath, "Contents", "Resources", "Variants", NULL);
 
-  if (!g_file_test (path,G_FILE_TEST_IS_DIR))
+  if (g_file_test (path, G_FILE_TEST_IS_DIR))
     {
-      g_message ("Theme variants path does not exist!");
-      g_free (path);
-      return NULL;
-    }
-  dir = g_dir_open (path, 0, &error);
-  if (dir != NULL)
-    {
-      name = g_dir_read_name (dir);
-      while (name != NULL)
+      dir = g_dir_open (path, 0, &error);
+      if (dir != NULL)
         {
-          /* FIXME: check for .css extention */
-          variants = g_list_prepend (variants, g_strndup (name, strlen (name) - 4));
           name = g_dir_read_name (dir);
+          while (name != NULL)
+            {
+              /* Only use files with .css extention */
+              if (g_str_has_suffix (name, ".css"))
+                {
+                  variants = g_list_prepend (variants, g_strndup (name, strlen (name) - 4));
+                }
+              name = g_dir_read_name (dir);
+            }
         }
     }
   g_free (path);
