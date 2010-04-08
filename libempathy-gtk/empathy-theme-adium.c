@@ -36,6 +36,8 @@
 #include <libempathy/empathy-utils.h>
 
 #include "empathy-theme-adium.h"
+#include "empathy-chat-theme.h"
+#include "empathy-adium-chat-theme.h"
 #include "empathy-smiley-manager.h"
 #include "empathy-conf.h"
 #include "empathy-ui-utils.h"
@@ -64,6 +66,8 @@ typedef struct {
 	GList                *message_queue;
 	guint                 notify_enable_webkit_developer_tools_id;
 	GtkWidget            *inspector_window;
+	EmpathyChatTheme     *theme;
+	gulong                variant_update_id;
 } EmpathyThemeAdiumPriv;
 
 struct _EmpathyAdiumData {
@@ -875,6 +879,10 @@ theme_adium_finalize (GObject *object)
 
 	empathy_adium_data_unref (priv->data);
 
+	if (priv->variant_update_id) {
+		g_signal_handler_disconnect (priv->theme, priv->variant_update_id);
+	}
+
 	empathy_conf_notify_remove (empathy_conf_get (),
 				    priv->notify_enable_webkit_developer_tools_id);
 
@@ -1145,6 +1153,7 @@ empathy_theme_adium_init (EmpathyThemeAdium *theme)
 	theme->priv = priv;
 
 	priv->smiley_manager = empathy_smiley_manager_dup_singleton ();
+	priv->variant_update_id = 0;
 
 	g_signal_connect (theme, "load-finished",
 			  G_CALLBACK (theme_adium_load_finished_cb),
@@ -1162,14 +1171,49 @@ empathy_theme_adium_init (EmpathyThemeAdium *theme)
 	theme_adium_update_enable_webkit_developer_tools (theme);
 }
 
-EmpathyThemeAdium *
-empathy_theme_adium_new (EmpathyAdiumData *data)
+void
+empathy_theme_adium_set_variant (EmpathyThemeAdium *view,
+	gchar *variant)
 {
+	gchar *script = g_strdup_printf ("setStylesheet (\"mainStyle\", \"Variants/%s.css\")", variant);
+	webkit_web_view_execute_script (WEBKIT_WEB_VIEW (view), script);
+	g_free (script);
+}
+
+static void
+empathy_theme_adium_variant_changed (EmpathyChatTheme *theme,
+	gpointer view)
+{
+	gchar *variant;
+
+	g_return_if_fail (EMPATHY_IS_ADIUM_CHAT_THEME (theme));
+	g_return_if_fail (EMPATHY_IS_THEME_ADIUM (view));
+
+	variant = empathy_chat_theme_get_selected_variant (theme);
+	empathy_theme_adium_set_variant (view, variant);
+	g_free (variant);
+}
+
+EmpathyThemeAdium *
+empathy_theme_adium_new (EmpathyChatTheme *theme,
+			 EmpathyAdiumData *data)
+{
+	EmpathyThemeAdium *view;
+	EmpathyThemeAdiumPriv *priv;
+
+	g_return_val_if_fail (EMPATHY_IS_ADIUM_CHAT_THEME (theme), NULL);
 	g_return_val_if_fail (data != NULL, NULL);
 
-	return g_object_new (EMPATHY_TYPE_THEME_ADIUM,
+	view = g_object_new (EMPATHY_TYPE_THEME_ADIUM,
 			     "adium-data", data,
 			     NULL);
+	priv = GET_PRIV(view);
+
+	priv->theme = theme;
+	priv->variant_update_id = g_signal_connect (theme, "variant-changed",
+		G_CALLBACK (empathy_theme_adium_variant_changed), view);
+
+	return view;
 }
 
 gboolean

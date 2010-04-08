@@ -277,7 +277,7 @@ empathy_adium_chat_theme_create_view (EmpathyChatTheme *theme)
       g_free (variant);
     }
 
-  view = empathy_theme_adium_new (priv->data);
+  view = empathy_theme_adium_new (theme, priv->data);
 
   return EMPATHY_CHAT_VIEW (view);
 }

@@ -25,6 +25,7 @@
 #include <webkit/webkitwebview.h>
 
 #include "empathy-chat-view.h"
+#include "empathy-chat-theme.h"
 
 G_BEGIN_DECLS
 
@@ -49,7 +50,8 @@ struct _EmpathyThemeAdiumClass {
 };
 
 GType              empathy_theme_adium_get_type (void) G_GNUC_CONST;
-EmpathyThemeAdium *empathy_theme_adium_new      (EmpathyAdiumData *data);
+EmpathyThemeAdium *empathy_theme_adium_new      (EmpathyChatTheme *theme,
+                                                 EmpathyAdiumData *data);
 void               empathy_theme_adium_set_variant (EmpathyThemeAdium *view,
                                                     gchar *variant);
 
