@@ -470,24 +470,14 @@ empathy_theme_boxes_set_colors (EmpathyThemeBoxes *self,
 	EmpathyChatTextView *view = EMPATHY_CHAT_TEXT_VIEW (self);
 	GtkTextTag          *tag;
 
-	/* FIXME: GtkTextTag don't support to set color properties to NULL.
-	 * See bug #542523 */
-
-	#define TAG_SET(prop, prop_set, value) \
-		if (value != NULL) { \
-			g_object_set (tag, prop, value, NULL); \
-		} else { \
-			g_object_set (tag, prop_set, FALSE, NULL); \
-		}
-
 	/* Define base tags */
 	tag = empathy_chat_text_view_tag_set (view, EMPATHY_CHAT_TEXT_VIEW_TAG_HIGHLIGHT,
 					      "weight", PANGO_WEIGHT_BOLD,
 					      "pixels-above-lines", 4,
 					      NULL);
-	TAG_SET ("paragraph-background", "paragraph-background-set", colors->text_background);
-	TAG_SET ("foreground", "foreground-set", colors->highlight_foreground);
-
+	g_object_set (tag,
+		"paragraph-background", colors->text_background,
+		"foreground", colors->highlight_foreground, NULL);
 	empathy_chat_text_view_tag_set (view, EMPATHY_CHAT_TEXT_VIEW_TAG_SPACING,
 					"size", 3000,
 					"pixels-above-lines", 8,
@@ -495,39 +485,40 @@ empathy_theme_boxes_set_colors (EmpathyThemeBoxes *self,
 	tag = empathy_chat_text_view_tag_set (view, EMPATHY_CHAT_TEXT_VIEW_TAG_TIME,
 					      "justification", GTK_JUSTIFY_CENTER,
 					      NULL);
-	TAG_SET ("foreground", "foreground-set", colors->time_foreground);
+	g_object_set (tag, "foreground", colors->time_foreground, NULL);
 	tag = empathy_chat_text_view_tag_set (view, EMPATHY_CHAT_TEXT_VIEW_TAG_ACTION,
 					      "style", PANGO_STYLE_ITALIC,
 					      "pixels-above-lines", 4,
 					      NULL);
-	TAG_SET ("paragraph-background", "paragraph-background-set", colors->text_background);
-	TAG_SET ("foreground", "foreground-set", colors->action_foreground);
+	g_object_set (tag,
+		"paragraph-background", colors->text_background,
+		"foreground", colors->action_foreground, NULL);
 	tag = empathy_chat_text_view_tag_set (view, EMPATHY_CHAT_TEXT_VIEW_TAG_BODY,
 					      "pixels-above-lines", 4,
 					      NULL);
-	TAG_SET ("paragraph-background", "paragraph-background-set", colors->text_background);
-	TAG_SET ("foreground", "foreground-set", colors->text_foreground);
+	g_object_set (tag,
+		"paragraph-background", colors->text_background,
+		"foreground", colors->text_foreground, NULL);
 	tag = empathy_chat_text_view_tag_set (view, EMPATHY_CHAT_TEXT_VIEW_TAG_EVENT,
 					      "justification", GTK_JUSTIFY_LEFT,
 					      NULL);
-	TAG_SET ("foreground", "foreground-set", colors->event_foreground);
+	g_object_set (tag, "foreground", colors->event_foreground, NULL);
 	tag = empathy_chat_text_view_tag_set (view, EMPATHY_CHAT_TEXT_VIEW_TAG_LINK,
 					      "underline", PANGO_UNDERLINE_SINGLE,
 					      NULL);
-	TAG_SET ("foreground", "foreground-set", colors->link_foreground);
+	g_object_set (tag, "foreground", colors->link_foreground, NULL);
 
 	/* Define BOXES tags */
 	tag = empathy_chat_text_view_tag_set (view, EMPATHY_THEME_BOXES_TAG_HEADER,
 					      "weight", PANGO_WEIGHT_BOLD,
 					      NULL);
-	TAG_SET ("foreground", "foreground-set", colors->header_foreground);
-	TAG_SET ("paragraph-background", "paragraph-background-set", colors->header_background);
+	g_object_set (tag,
+		"foreground", colors->header_foreground,
+		"paragraph-background", colors->header_background, NULL);
 	tag = empathy_chat_text_view_tag_set (view, EMPATHY_THEME_BOXES_TAG_HEADER_LINE,
 					      "size", 1,
 					      NULL);
-	TAG_SET ("paragraph-background", "paragraph-background-set", colors->header_line_background);
-
-	#undef TAG_SET
+	g_object_set (tag, "paragraph-background", colors->header_line_background, NULL);
 }
 
 static void
