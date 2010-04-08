@@ -384,6 +384,7 @@ theme_boxes_finalize (GObject *object)
 	if (priv->variant_update_id) {
 		g_signal_handler_disconnect (priv->theme, priv->variant_update_id);
 	}
+	g_object_unref (priv->theme);
 
 	empathy_conf_notify_remove (empathy_conf_get (),
 				    priv->notify_show_avatars_id);
@@ -458,6 +459,7 @@ empathy_theme_boxes_new (EmpathyChatTheme *theme)
 	priv = GET_PRIV (view);
 
 	priv->theme = theme;
+	g_object_ref (theme);
 	priv->variant_update_id = g_signal_connect (theme, "variant-changed",
 		G_CALLBACK (empathy_theme_boxes_variant_changed), view);
 	return view;

@@ -882,6 +882,7 @@ theme_adium_finalize (GObject *object)
 	if (priv->variant_update_id) {
 		g_signal_handler_disconnect (priv->theme, priv->variant_update_id);
 	}
+	g_object_unref (priv->theme);
 
 	empathy_conf_notify_remove (empathy_conf_get (),
 				    priv->notify_enable_webkit_developer_tools_id);
@@ -1210,6 +1211,8 @@ empathy_theme_adium_new (EmpathyChatTheme *theme,
 	priv = GET_PRIV(view);
 
 	priv->theme = theme;
+	g_object_ref (theme);
+
 	priv->variant_update_id = g_signal_connect (theme, "variant-changed",
 		G_CALLBACK (empathy_theme_adium_variant_changed), view);
 
