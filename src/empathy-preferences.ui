@@ -737,6 +737,19 @@
                       </packing>
                     </child>
                     <child>
+                      <object class="GtkLabel" id="label4">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">When you choose another theme, the theme will only be applied to new conversations.</property>
+                        <property name="justify">center</property>
+                        <property name="wrap">True</property>
+                        <property name="wrap_mode">word-char</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
                       <object class="GtkHBox" id="hbox2">
                         <property name="visible">True</property>
                         <property name="spacing">6</property>
@@ -786,7 +799,7 @@
                       <packing>
                         <property name="expand">False</property>
                         <property name="fill">False</property>
-                        <property name="position">1</property>
+                        <property name="position">2</property>
                       </packing>
                     </child>
                   </object>
