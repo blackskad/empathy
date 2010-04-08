@@ -96,12 +96,6 @@ empathy_chat_theme_create_thumbnail (EmpathyChatTheme *theme,
   view = empathy_chat_theme_create_view (theme);
   gtk_widget_size_allocate (GTK_WIDGET (view), &allocation);
 
-  /* FIXME: GtkTextView doesn't like GtkOffscreenWindow, see #609818*/ 
-  if (GTK_IS_TEXT_VIEW (view))
-    {
-      return;
-    }
-
   while (gtk_events_pending ())
     {
       gtk_main_iteration_do (FALSE);
@@ -114,26 +108,31 @@ empathy_chat_theme_create_thumbnail (EmpathyChatTheme *theme,
    * aren't handled first. An async version would get rid of the forcing */
   window = gtk_offscreen_window_new ();
   gtk_container_add (GTK_CONTAINER (window), GTK_WIDGET (view));
-  gtk_widget_show_all (window);
 
-  while (gtk_events_pending ())
+  /* FIXME: GtkTextView doesn't like GtkOffscreenWindow, see #609818*/ 
+  if (GTK_IS_TEXT_VIEW (view))
     {
-      gtk_main_iteration_do (FALSE);
-    }
+      gtk_widget_show_all (window);
 
-  /* get a snapshot and create the preview, the easy way...
-   * FIXME: develop an algorithm to discover the interesting parts of an image
-   * */
-  full = gtk_offscreen_window_get_pixmap (GTK_OFFSCREEN_WINDOW (window));
-  gdk_drawable_get_size (full, &width, &height);
-  priv->thumbnail = gdk_pixbuf_get_from_drawable (NULL, full, gdk_colormap_get_system (),
-      0, 0, 0, 0, (width < 100) ? width : 100, (height < 100) ? height : 100);
+      while (gtk_events_pending ())
+        {
+          gtk_main_iteration_do (FALSE);
+        }
 
-  /* save the preview to the cache */
-  gdk_pixbuf_save (priv->thumbnail, cachefile, "png", &error, NULL);
-  if (error)
-    {
-      g_message("Failed to save thumbnail for theme %s: %s\n", priv->name, error->message);
+      /* get a snapshot and create the preview, the easy way...
+       * FIXME: develop an algorithm to discover the interesting parts of an image
+       * */
+      full = gtk_offscreen_window_get_pixmap (GTK_OFFSCREEN_WINDOW (window));
+      gdk_drawable_get_size (full, &width, &height);
+      priv->thumbnail = gdk_pixbuf_get_from_drawable (NULL, full, gdk_colormap_get_system (),
+          0, 0, 0, 0, (width < 100) ? width : 100, (height < 100) ? height : 100);
+
+      /* save the preview to the cache */
+      gdk_pixbuf_save (priv->thumbnail, cachefile, "png", &error, NULL);
+      if (error)
+        {
+          g_message("Failed to save thumbnail for theme %s: %s\n", priv->name, error->message);
+        }
     }
   gtk_widget_destroy(window);
 }
