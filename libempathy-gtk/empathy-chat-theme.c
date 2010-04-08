@@ -110,7 +110,7 @@ empathy_chat_theme_create_thumbnail (EmpathyChatTheme *theme,
   gtk_container_add (GTK_CONTAINER (window), GTK_WIDGET (view));
 
   /* FIXME: GtkTextView doesn't like GtkOffscreenWindow, see #609818*/ 
-  if (GTK_IS_TEXT_VIEW (view))
+  if (!GTK_IS_TEXT_VIEW (view))
     {
       gtk_widget_show_all (window);
 

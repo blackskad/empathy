@@ -112,13 +112,27 @@ empathy_boxed_chat_theme_create_view (EmpathyChatTheme *theme)
 
   g_return_val_if_fail (EMPATHY_IS_BOXED_CHAT_THEME (theme), NULL);
 
-  view = empathy_theme_boxes_new ();
+  view = empathy_theme_boxes_new (theme);
   variant = empathy_chat_theme_get_selected_variant (theme);
 
   empathy_boxes_chat_theme_set_view_variant (view, variant);
 
   g_free (variant);
   return EMPATHY_CHAT_VIEW (view);
+}
+
+void
+empathy_boxed_chat_theme_update_view_variant (EmpathyChatTheme  *theme,
+    EmpathyChatView *view)
+{
+  gchar *variant;
+
+  g_return_if_fail (EMPATHY_IS_BOXED_CHAT_THEME (theme));
+  g_return_if_fail (EMPATHY_IS_THEME_BOXES (view));
+
+  variant = empathy_chat_theme_get_selected_variant (theme);
+  empathy_boxes_chat_theme_set_view_variant (EMPATHY_THEME_BOXES (view), variant);
+  g_free (variant);
 }
 
 static void

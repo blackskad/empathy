@@ -55,6 +55,9 @@ struct _EmpathyBoxedChatThemeClass
 GType  empathy_boxed_chat_theme_get_type (void);
 GList *empathy_boxed_chat_theme_discover (void);
 
+void   empathy_boxed_chat_theme_update_view_variant (EmpathyChatTheme  *theme,
+                                                     EmpathyChatView   *view);
+
 G_END_DECLS
 
 #endif /* __EMPATHY_BOXED_CHAT_THEME_H__ */

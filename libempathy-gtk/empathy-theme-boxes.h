@@ -26,6 +26,7 @@
 
 #include <glib-object.h>
 
+#include "empathy-chat-theme.h"
 #include "empathy-chat-text-view.h"
 
 G_BEGIN_DECLS
@@ -67,7 +68,7 @@ struct _EmpathyThemeBoxesColors {
 #define EMPATHY_THEME_BOXES_TAG_HEADER_LINE "fancy-header-line"
 
 GType              empathy_theme_boxes_get_type   (void) G_GNUC_CONST;
-EmpathyThemeBoxes *empathy_theme_boxes_new        (void);
+EmpathyThemeBoxes *empathy_theme_boxes_new        (EmpathyChatTheme *theme);
 
 void empathy_theme_boxes_set_colors        (EmpathyThemeBoxes *theme,
                                             EmpathyThemeBoxesColors *colors);

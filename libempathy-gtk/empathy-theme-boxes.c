@@ -32,6 +32,8 @@
 
 #include <libempathy/empathy-utils.h>
 #include "empathy-theme-boxes.h"
+#include "empathy-boxed-chat-theme.h"
+#include "empathy-chat-theme.h"
 #include "empathy-ui-utils.h"
 #include "empathy-conf.h"
 
@@ -46,7 +48,10 @@
 
 #define GET_PRIV(obj) EMPATHY_GET_PRIV (obj, EmpathyThemeBoxes)
 typedef struct {
+	EmpathyChatTheme *theme;
+
 	gulong   style_update_id;
+	gulong   variant_update_id;
 	gboolean show_avatars;
 } EmpathyThemeBoxesPriv;
 
@@ -362,6 +367,31 @@ theme_boxes_append_message (EmpathyChatTextView *view,
 }
 
 static void
+theme_boxes_notify_show_avatars_cb (EmpathyConf *conf,
+				    const gchar *key,
+				    gpointer     user_data)
+{
+	EmpathyThemeBoxesPriv *priv = GET_PRIV (user_data);
+
+	empathy_conf_get_bool (conf, key, &priv->show_avatars);
+}
+
+static void
+theme_boxes_finalize (GObject *object)
+{
+	EmpathyThemeBoxesPriv *priv = GET_PRIV (object);
+
+	if (priv->variant_update_id) {
+		g_signal_handler_disconnect (priv->theme, priv->variant_update_id);
+	}
+
+	empathy_conf_notify_remove (empathy_conf_get (),
+				    priv->notify_show_avatars_id);
+
+	G_OBJECT_CLASS (empathy_theme_boxes_parent_class)->finalize (object);
+}
+
+static void
 empathy_theme_boxes_class_init (EmpathyThemeBoxesClass *class)
 {
 	GObjectClass             *object_class;
@@ -390,6 +420,7 @@ empathy_theme_boxes_init (EmpathyThemeBoxes *theme)
 	theme_boxes_create_tags (theme);
 
 	priv->style_update_id = 0;
+	priv->variant_update_id = 0;
 
 	priv->notify_show_avatars_id =
 		empathy_conf_notify_add (empathy_conf_get (),
@@ -405,12 +436,31 @@ empathy_theme_boxes_init (EmpathyThemeBoxes *theme)
 		      NULL);
 }
 
-EmpathyThemeBoxes *
-empathy_theme_boxes_new (void)
+static void
+empathy_theme_boxes_variant_changed (EmpathyChatTheme *theme,
+	gpointer view)
 {
-	return g_object_new (EMPATHY_TYPE_THEME_BOXES,
+	g_return_if_fail (EMPATHY_IS_BOXED_CHAT_THEME (theme));
+	empathy_boxed_chat_theme_update_view_variant (theme, view);
+}
+
+EmpathyThemeBoxes *
+empathy_theme_boxes_new (EmpathyChatTheme *theme)
+{
+	EmpathyThemeBoxes *view;
+	EmpathyThemeBoxesPriv *priv;
+
+	g_return_val_if_fail (EMPATHY_IS_BOXED_CHAT_THEME (theme), NULL);
+
+	view = g_object_new (EMPATHY_TYPE_THEME_BOXES,
 			     "only-if-date", TRUE,
 			     NULL);
+	priv = GET_PRIV (view);
+
+	priv->theme = theme;
+	priv->variant_update_id = g_signal_connect (theme, "variant-changed",
+		G_CALLBACK (empathy_theme_boxes_variant_changed), view);
+	return view;
 }
 
 void
@@ -526,6 +576,7 @@ empathy_theme_boxes_use_system_colors (EmpathyThemeBoxes *theme,
 		/* only connect when we're not connected yet */
 		priv->style_update_id = g_signal_connect (G_OBJECT (theme), "style-set",
 				                          G_CALLBACK (on_style_set_cb), NULL);
+		on_style_set_cb (GTK_WIDGET (theme), NULL, NULL);
 	} else if (!use_system_colors && priv->style_update_id != 0) {
 		/* only disconnect when there is something to disconnect */
 		g_signal_handler_disconnect (G_OBJECT (theme), priv->style_update_id);
